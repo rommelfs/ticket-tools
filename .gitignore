@@ -1,0 +1,12 @@
+config.py
+config.pyc
+inc_*.conf
+keys.*
+tests
+logs
+misp
+ava.txt
+ddos.txt
+dos2.txt
+open_tickets_list.txt.backup
+open_tickets_list.txt

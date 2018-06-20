@@ -1,0 +1,6 @@
+#!/bin/bash
+XMPPuser=
+XMPPpass=''
+XMPPserv=''
+XMPProom=''
+XMPPresource=''

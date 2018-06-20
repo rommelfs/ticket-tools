@@ -1,0 +1,8 @@
+
+rt_url = 'https://SOMEHOST/rt/REST/1.0/'
+rt_user = 'username'
+rt_pass = 'password'
+sphinx_server = '127.0.0.1'
+sphinx_port = 9312
+known_good_excludelist = ['8.8.8.8']
+ua = "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.3; Trident/7.0; .NET4.0E; .NET4.0C)"

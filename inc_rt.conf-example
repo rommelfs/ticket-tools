@@ -1,0 +1,9 @@
+#!/bin/bash
+# RT user name
+export RTUSER=
+# RT password
+export RTPASS=
+# RT URL
+export RTSERVER=
+# RT Ticket string (usually $RTSERVER + Ticket/Display.html?id=)
+export RTTICKET=

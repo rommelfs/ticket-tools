@@ -1,0 +1,34 @@
+Abuse report: Compromised Mumbleheard client in your network 
+Dear Abuse teams,
+ 
+ CIRCL is the CERT/CSIRT (Computer Emergency Response Team/Computer Security Incident Response Team) for the private sector, communes and non-governmental entities in Luxembourg.
+ 
+ We found out that at the time of writing the following list of client(s) appears to be compromised by a malware from the Mumbleheard malware family.
+
+  $details
+ 
+ 'Mumblehard' is a malware for Linux/BSD operating systems. The malware installs a backdoor providing the malicious actors with full access to the infected system and allows for execution of arbitrary code. The malware also includes a general-purpose proxy module and a module for sending huge amounts of spam messages.
+ 
+ A detailed analysis of Mumblehard is available at: <http://www.welivesecurity.com/wp-content/uploads/2015/04/mumblehard.pdf>
+ 
+ Technical indicators of compromise (IoCs) are available at:
+ <https://github.com/eset/malware-ioc/tree/master/mumblehard>
+ 
+ The malware installs a cronjob for connecting to a command-and-control server every 15 minutes. Domain names and IP addresses used for this purpose have been redirected to a so-called sinkhole logging the requests.
+ 
+ Please find below a list of IP addresses hosted in your country that tried to connect to a command-and-control server for Mumblehard. This is a string indicator hosts on those IP addresses are infected with the malware.
+ 
+ We would like to ask you to notify the owners of the affected hosts and/or the responsible hosting providers of the infections. 
+ 
+ 
+ Don't hesitate to get back to us if you have further questions or need additional support.
+ 
+ We would appreciate if you confirm the reception of this report.
+ 
+ [1] https://www.us-cert.gov/ncas/alerts/TA16-336A
+ 
+ With kind regards,
+ --
+ CIRCL - Computer Incident Response Center Luxembourg
+ 16, boulevard d'Avranches - L-1160 Luxembourg
+ http://www.circl.lu/
