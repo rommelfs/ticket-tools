@@ -42,12 +42,13 @@ template = os.path.join(mypath, template)
 
 # Config
 min_size = 5000
+import config as cfg
 ua = cfg.ua
 rt_url = cfg.rt_url
 rt_user = cfg.rt_user
 rt_pass = cfg.rt_pass
 sphinx_server = cfg.sphinx_server
-sphinx_port = cfg.sphing_port
+sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
 debug = False 
 
