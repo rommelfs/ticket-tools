@@ -1,6 +1,17 @@
 # ticket-tools
 
-## get-urlabuse-reports.sh
+## get-reports.sh
+`get-reports.sh` is a standalone tool to iterate through defined submission types. It keeps a list of definitions in  `get-reports.inc`. 
+The submission is checked by `UrlAbuse` and offers the possibility to 
+- automatically create a take-down request based on templates (from `./templates`), the source ticket will be moved to the incident queue. A classification will be added according to the take-down type.
+- ignore the ticket (ticket will be closed without further action)
+- exit the program (start next time at the ticket where exited)
+
+The tool relies on a working version of `create_ticket_with_template.py`
+This tool deprecates the following three tools.
+
+
+### get-urlabuse-reports.sh (deprecated)
 `get-urlabuse-reports.sh` is a standalone tool to iterate through new `UrlAbuse` submissions (https://www.circl.lu/urlabuse/ and https://www.circl.lu/services/urlabuse/) from users to the ticket system.
 The submission is checked by `UrlAbuse` and offers the possibility to 
 - automatically create a take-down request based on templates (from `./templates`), the source ticket will be closed
@@ -9,7 +20,7 @@ The submission is checked by `UrlAbuse` and offers the possibility to
 
 The tool relies on a working version of `create_ticket_with_template.py`
 
-## get-phishlab-reports.sh
+### get-phishlab-reports.sh (deprecated)
 `get-phishlab-reports.sh` is a standalone tool to iterate through new Phishlab reports to the ticket system.
 The submission is checked by `UrlAbuse` and offers the possibility to 
 - automatically create a take-down request based on templates (from `./templates`), the source ticket will be closed
@@ -18,7 +29,7 @@ The submission is checked by `UrlAbuse` and offers the possibility to
 
 The tool relies on a working version of `create_ticket_with_template.py`
 
-## create_ticket_with_template.py
+### create_ticket_with_template.py (deprecated)
 
 `create_ticket_with_template.py` 
 `Usage: create_ticket_with_template.py Incident-ID Templatename URL [Onlinecheck:True|False] [Queue]`
