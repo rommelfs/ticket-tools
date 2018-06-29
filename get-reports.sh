@@ -33,17 +33,17 @@ do
     1)  echo "Phishing server take-down request"
         $CREATETICKET_BIN $tn $TEMPLATE_PHISHING $URL False
         #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents" Classification="Phishing"
+        $RT_BIN edit $tn set queue="Incidents" CF-Classification="Phishing"
         ;;
     2)  echo "Malware server take-down request"
         $CREATETICKET_BIN $tn $TEMPLATE_MALWARE $URL False
         #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents" Classification="Malware"
+        $RT_BIN edit $tn set queue="Incidents" CF-Classification="Malware"
         ;;
     3)  echo "Defaced server take-down request"
         $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT $URL False
         #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents" Classification="System Compromise"
+        $RT_BIN edit $tn set queue="Incidents" CF-Classification="System Compromise"
         ;;
     9)  $RT_BIN resolve $tn
         ;;
