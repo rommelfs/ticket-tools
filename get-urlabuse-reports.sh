@@ -26,7 +26,7 @@ do
     echo "Take-down consideration"
     echo "Emails" 
     echo "$UA_RESULT" | grep "All emails" | cut -d ":" -f2
-    read -rsn1 -p"press (1) for phishing, (2) for malware, (9) ignore, (0) for exit" option;echo
+    read -rsn1 -p"press (1) for phishing, (2) for malware, (3) for compromised, (9) ignore, (0) for exit" option;echo
     case $option in
     1)  echo "Phishing server take-down request"
         python /home/rommelfs/ticket-tools/create_ticket_with_template.py $tn /home/rommelfs/ticket-tools/templates/phishing_server.tmpl $URL False 5
@@ -35,6 +35,11 @@ do
         ;;
     2)  echo "Malware server take-down request"
         python /home/rommelfs/ticket-tools/create_ticket_with_template.py $tn /home/rommelfs/ticket-tools/templates/malicious_files_hosted.tmpl $URL False 5
+        /opt/rt4/bin/rt resolve $tn
+        #echo $tn >> $LOGFILE
+        ;;
+    3)  echo "Compromised server take-down request"
+        python /home/rommelfs/ticket-tools/create_ticket_with_template.py $tn /home/rommelfs/ticket-tools/templates/compromised_website.tmpl $URL False 5
         /opt/rt4/bin/rt resolve $tn
         #echo $tn >> $LOGFILE
         ;;
