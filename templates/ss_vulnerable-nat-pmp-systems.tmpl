@@ -1,0 +1,35 @@
+Abuse report: Vulnerable NAT-PMP Systems in your network 
+Dear Abuse teams,
+ 
+ CIRCL is the CERT/CSIRT (Computer Emergency Response Team/Computer Security Incident Response Team) for the private sector, communes and non-governmental entities in Luxembourg.
+ 
+ We have been informed by a trusted source that at the time of writing the following list of client(s) appears to be vulnerable NAT-PMP systems[1].
+
+  $details
+
+ What are possible solutions?
+ 
+ (1) Configure NAT-PMP Securely
+ Developers and administrators implementing NAT-PMP should exercise care to ensure that devices are configured securely, specifically that the LAN and WAN interfaces are correctly assigned, NAT-PMP requests are only accepted on internal interfaces, and port mappings are only opened for the requesting internal IP address.
+
+ (2) Update miniupnpd
+ Although the NAT-PMP vulnerabilities are not due to flaws in miniupnpd's code, an update has been released that more strictly enforces RFC 6886. As of version 1.8.20141022, miniupnpd discards NAT-PMP packets received on the WAN interface. The default configuration file, miniupnpd.conf, now contains additional comments to encourage more secure configurations.
+ 
+ (3) Restrict Access
+ Deploy firewall rules to block untrusted hosts from being able to access port 5351/udp.
+
+ (4) Disable NAT-PMP
+ Consider disabling NAT-PMP on the device if it is not absolutely necessary. 
+
+ 
+ Don't hesitate to get back to us if you have further questions or need additional support or want to inform us about false positives.
+ 
+ We would appreciate if you confirm the reception of this report.
+ 
+ [1] https://www.kb.cert.org/vuls/id/184540
+ 
+ With kind regards,
+ --
+ CIRCL - Computer Incident Response Center Luxembourg
+ 16, boulevard d'Avranches - L-1160 Luxembourg
+ http://www.circl.lu/

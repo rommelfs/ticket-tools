@@ -1,0 +1,30 @@
+Abuse report: Vulnerable CISCO Smart Install Systems in your network 
+Dear Abuse teams,
+ 
+ CIRCL is the CERT/CSIRT (Computer Emergency Response Team/Computer Security Incident Response Team) for the private sector, communes and non-governmental entities in Luxembourg.
+ 
+ We have been informed by a trusted source that at the time of writing the following list of client(s) appear to be publicly accessible devices that have the Cisco Smart Install service running [1][2] on port 4786/tcp.
+
+  $details
+
+ This service does not require authentication or authorization and could allow an entity to obtain a copy of the device's config file, upload an altered config file, or even upload/install an iOS software image that is different than the device is currently running.
+
+ What are possible solutions?
+ 
+ (1) Disable the service if not needed
+
+ (2) Implement access lists to restrict access to this service
+
+ 
+ Don't hesitate to get back to us if you have further questions or need additional support or want to inform us about false positives.
+ 
+ We would appreciate if you confirm the reception of this report.
+ 
+ [1] https://smartinstallscan.shadowserver.org
+ [2] http://blog.shadowserver.org/2014/03/28/the-scannings-will-continue-until-the-internet-improves/
+
+ With kind regards,
+ --
+ CIRCL - Computer Incident Response Center Luxembourg
+ 16, boulevard d'Avranches - L-1160 Luxembourg
+ http://www.circl.lu/
