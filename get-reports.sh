@@ -15,6 +15,79 @@ then
   echo "No tickets to process."
   exit
 fi
+
+if [[ "$1" =~ "cert-bund" ]]
+then
+  for tn in $LAST
+  do
+    SUBJECT=`$RT_BIN show $tn -f subject`
+    echo $SUBJECT
+    OLD_IFS="$IFS"
+    IFS=$'\n'
+    for t in $CERTBUND_TOPICS
+    do
+      IFS=',' read -ra cb_conf <<< "$t"
+      CB_TOPIC="${cb_conf[0]}"
+      CB_PATH="${cb_conf[1]}"
+      CB_TICKET="${cb_conf[2]}"
+      if [[ "$SUBJECT" =~ "$CB_TOPIC" ]]
+        then
+          echo "$SUBJECT matches $CB_TOPIC"
+          tmpfile_csv=$(mktemp --suffix=.csv /tmp/get_cert-bund.XXXXXX)
+          $RT_BIN show $tn | grep "Affected hosts on your networks:" -A 1000 |grep "^\""|grep -v "Affected hosts on" > $tmpfile_csv
+          echo "Processing CERT-Bund"
+          echo "Topic: $CB_TOPIC"
+          echo "Template: $CB_PATH"
+          echo "Master Ticket: $CB_TICKET"
+          $CREATE_BULK_BIN $CB_TICKET $CB_PATH $tmpfile_csv
+          $RT_BIN resolve $tn
+          rm $tmpfile_csv
+      fi
+    done
+    IFS="$OLD_IFS"
+  done
+  exit 0
+fi
+
+if [[ "$1" =~ "shadowserver" ]]
+then
+  for tn in $LAST
+  do
+    SUBJECT=`$RT_BIN show $tn -f subject`
+    echo $SUBJECT
+    OLD_IFS="$IFS"
+    IFS=$'\n'
+    for t in $SHADOWSERVER_TOPICS
+    do
+      IFS=',' read -ra ss_conf <<< "$t"
+      SS_TOPIC="${ss_conf[0]}"
+      SS_PATH="${ss_conf[1]}"
+      SS_TICKET="${ss_conf[2]}"
+      if [[ "$SUBJECT" =~ "$SS_TOPIC" ]]
+        then
+          echo "$SUBJECT matches $SS_TOPIC"
+          ATTACHMENT=`$RT_BIN show $tn/attachments | grep .csv.zip|cut -d ":" -f 1`
+          echo $ATTACHMENT
+          tmpfile_zip=$(mktemp --suffix=.csv.zip /tmp/get_shadowserver.XXXXXX)
+          $RT_BIN show $tn/attachments/$ATTACHMENT/content > $tmpfile_zip
+          tmpfile_csv=$(mktemp --suffix=.csv /tmp/get_shadowserver.XXXXXX)
+          7z -o/tmp -so x $tmpfile_zip > $tmpfile_csv
+          echo $tmpfile_csv
+          rm $tmpfile_zip
+          echo "Processing ShadowServer..."
+          echo "Topic: $SS_TOPIC"
+          echo "Template: $SS_PATH"
+          echo "Master Ticket: $SS_TICKET"
+          $CREATE_BULK_BIN $SS_TICKET $SS_PATH $tmpfile_csv
+          $RT_BIN resolve $tn
+          rm $tmpfile_csv
+      fi
+    done
+    IFS="$OLD_IFS"
+  done
+  exit 0
+fi
+
 i=0
 for tn in $LAST 
 do
@@ -22,7 +95,12 @@ do
     let nb_tickets=nb_tickets-$i
     echo -e "\nProcessing tiket #$tn ($nb_tickets left to process)"
     echo "Processing ticket #$tn"
-    URL=`$RT_BIN show $tn |egrep -o "h[tx][tx]ps?://[^ ]+" | head -n 1` 
+    URL=`$RT_BIN show $tn |egrep -o "h[txX][txX]ps?://[^ ]+" | head -n 1` 
+    if [ -z $URL ]
+    then
+        echo "We should have a URL, but there is none. Something is wrong."
+        exit 1
+    fi 
     #./rt show $tn 
     URL=`echo $URL|sed -e "s/h[xX][xX]p\:/http\:/"`
     URL=`echo $URL|sed -e "s/h[xX][xX]ps\:/https\:/"`
@@ -52,7 +130,9 @@ do
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
         ;;
-    9)  $RT_BIN resolve $tn
+    8)  ;;
+    9)  $RT_BIN comment $tn -m "URL unreachable at time of testing or not considered malicious"
+        $RT_BIN resolve $tn
         ;;
     0)  exit
         ;;
