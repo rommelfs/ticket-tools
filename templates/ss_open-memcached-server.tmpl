@@ -1,0 +1,30 @@
+Abuse report: Open Redis servers in your network 
+Dear Abuse teams,
+ 
+ CIRCL is the CERT/CSIRT (Computer Emergency Response Team/Computer Security Incident Response Team) for the private sector, communes and non-governmental entities in Luxembourg.
+ 
+ We have been informed by a trusted source that at the time of writing the following list of IP(s) appear to be publicly accessible Memcached servers. As Redis has no authentication implemented, anyone has access to the key-value store.
+
+  $details
+
+ This service does not require authentication or authorization and could allow an entity to obtain a copy of the database.
+
+ What are possible solutions?
+ 
+ (1) Disable the service if not needed
+
+ (2) Implement access lists to restrict access to this service
+
+ 
+ Don't hesitate to get back to us if you have further questions or need additional support or want to inform us about false positives.
+ 
+ We would appreciate if you confirm the reception of this report.
+ 
+ [1] https://www.shadowserver.org/wiki/pmwiki.php/Services/Open-Memcached
+ [2] https://memcachedscan.shadowserver.org
+
+ With kind regards,
+ --
+ CIRCL - Computer Incident Response Center Luxembourg
+ 16, boulevard d'Avranches - L-1160 Luxembourg
+ http://www.circl.lu/
