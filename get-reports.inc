@@ -5,8 +5,8 @@ TEMPLATE_DIR="/home/rommelfs/ticket-tools/templates"
 TEMPLATE_PHISHING="$TEMPLATE_DIR/phishing_server.tmpl"
 TEMPLATE_MALWARE="$TEMPLATE_DIR/malicious_files_hosted.tmpl"
 TEMPLATE_DEFACEMENT="$TEMPLATE_DIR/defaced_website.tmpl"
-
-CERTBUND_TOPICS="Malware infections, $TEMPLATE_DIR/cb_malware-infections.tmpl, 582865
+TEMPLATE_COMPROMISED_WEBSHELL="$TEMPLATE_DIR/compromised_website-with-webshell.tmpl"
+CERTBUND_TOPICS="Malware infections in country, $TEMPLATE_DIR/cb_malware-infections.tmpl, 582865
 Avalanche, $TEMPLATE_DIR/cb_malware-compromised-avalance-client.tmpl, 582867"
 
 SHADOWSERVER_TOPICS="NTP Monitor, $TEMPLATE_DIR/ss_ntp-monitor.tmpl, 582270
