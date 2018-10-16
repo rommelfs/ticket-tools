@@ -40,6 +40,8 @@ rt_pass = cfg.rt_pass
 sphinx_server = cfg.sphinx_server
 sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
+report_ignore_list = cfg.report_ignore_list
+report_ignore_email = cfg.report_ignore_email
 debug = False 
 
 # RT
@@ -96,7 +98,7 @@ if 'asn' in headerline or 'src_asn' in headerline:
         reader = csv.DictReader(f)
         my_list= list(reader)
     for item in my_list:
-        if item and (item['ip'] not in excludelist or item['hostname'] not in excludelist):
+        if item and (item['ip'] not in excludelist or item['hostname'] not in excludelist or item['ip'] not in report_ignore_list or item['hostename'] not in report_ignore_list):
             asns.add(item[asn_field])
 
     for asn in asns:
@@ -110,7 +112,8 @@ if 'asn' in headerline or 'src_asn' in headerline:
             if 'emails' in key:
                 for email in value:
                     if 'peering' not in email:
-                        sendto.append(email)
+                        if email not in report_ignore_email:
+                            sendto.append(email)
         #
         print sendto
         #
