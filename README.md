@@ -1,5 +1,7 @@
 # ticket-tools
 
+More tools are about to be released
+
 ## get-reports.sh
 `get-reports.sh` is a standalone tool to iterate through defined submission types. It keeps a list of definitions in  `get-reports.inc`. 
 The submission is checked by `UrlAbuse` and offers the possibility to 
