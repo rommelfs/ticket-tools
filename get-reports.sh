@@ -140,7 +140,7 @@ then
           echo "Topic: $SS_TOPIC"
           echo "Template: $SS_PATH"
           echo "Master Ticket: $SS_TICKET"
-          $CREATE_BULK_BIN $SS_TICKET $SS_PATH $tmpfile_csv
+          $CREATE_BULK_BIN $SS_TICKET $SS_PATH $tmpfile_csv 1 
           $RT_BIN resolve $tn
           rm $tmpfile_csv
       fi
