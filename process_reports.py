@@ -27,6 +27,10 @@ if len(sys.argv) < 4:
 incident = sys.argv[1]
 template = sys.argv[2]
 csvfile	 = sys.argv[3]
+try:
+    use_ignore = sys.argv[4]
+except:
+    use_ignore = 0
 
 mypath = os.path.dirname(os.path.realpath(sys.argv[0]))
 #template = os.path.join(mypath, template)
@@ -112,7 +116,12 @@ if 'asn' in headerline or 'src_asn' in headerline:
             if 'emails' in key:
                 for email in value:
                     if 'peering' not in email:
-                        if email not in report_ignore_email:
+                        if use_ignore is 1:
+                            if email in report_ignore_email:
+                                sendto = []
+                            else:
+                                sendto.append(email)
+                        else:
                             sendto.append(email)
         #
         print sendto
