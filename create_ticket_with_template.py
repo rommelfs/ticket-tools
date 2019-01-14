@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import ssl
 import sys
 from string import Template
 from defang import defang
@@ -7,10 +6,9 @@ from defang import refang
 import os
 
 import urllib
-import urllib2 
+import urllib2
 
-sys.path.append("/home/urlabuse/")
-import url_abuse as urlabuse
+from pyurlabuse import PyURLAbuse
 
 from rtkit.resource import RTResource
 from rtkit.authenticators import CookieAuthenticator
@@ -21,19 +19,19 @@ import logging
 import sphinxapi
 
 if len(sys.argv) < 4:
-    print "Usage: %s Incident-ID Templatename URL [Onlinecheck:True|False] [Queue]" % sys.argv[0]
+    print("Usage: %s Incident-ID Templatename URL [Onlinecheck:True|False] [Queue]" % sys.argv[0])
     sys.exit(1)
 
 incident = sys.argv[1]
 template = sys.argv[2]
-url	 = sys.argv[3]
+url = sys.argv[3]
 try:
     onlinecheck = sys.argv[4]
-except:
+except Exception:
     onlinecheck = True
 try:
     queue = sys.argv[5]
-except:
+except Exception:
     queue = 5
 
 mypath = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -50,11 +48,12 @@ rt_pass = cfg.rt_pass
 sphinx_server = cfg.sphinx_server
 sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
-debug = False 
+debug = False
+
 
 def is_online(resource):
     try:
-	global ua
+        global ua
         global min_size
         request = urllib2.Request(resource)
         request.add_header('User-agent', ua)
@@ -65,7 +64,7 @@ def is_online(resource):
         else:
             return False, size
     except Exception as e:
-        print e
+        print(e)
         return False, -1
 
 
@@ -83,60 +82,76 @@ client.SetMatchMode(2)
 def is_ticket_open(id):
     status = False
     try:
-        ticket="ticket/%s" % id
+        ticket = "ticket/%s" % id
         response = resource.get(path=ticket)
         for r in response.parsed:
-            l = { a:b for a,b in r }
+            l = {a: b for a, b in r}
             ticket_status = l["Status"]
             if ticket_status == "open" or ticket_status == "new":
-                status = id 
-    except:
+                status = id
+    except Exception:
         return False
     return status
 
+
 def open_tickets_for_url(url):
-    q   = "\"%s\"" % url
+    q = "\"%s\"" % url
     res = 0
-    tickets = []
+    # tickets = []
     result = client.Query(q)
     for match in result['matches']:
         res = is_ticket_open(match['id'])
-    return res 
+    return res
 
 
-print "Checking URL: %s" % url
+print("Checking URL: %s" % url)
 
 if onlinecheck is True:
     open_tickets = open_tickets_for_url(url)
     if open_tickets > 0:
-        print "Ticket for this URL (%s) already exists: %s" % (url, open_tickets)
+        print("Ticket for this URL (%s) already exists: %s" % (url, open_tickets))
         sys.exit(0)
-    online,size = is_online(url)
+    online, size = is_online(url)
     if not online:
-        print "Resource %s is offline (size: %s)" % (url, size)
+        print("Resource %s is offline (size: %s)" % (url, size))
         sys.exit(1)
 
-emails, text, asn = urlabuse.run_lookup(url)
-text = defang(urllib.quote(text))
-d={ 'details' : text }
+response = PyURLAbuse.run_query(url, return_mail_template=True)
+
+emails = []
+asns = []
+for entry in response['result']:
+    for url, details in entry.items():
+        # Details contains the information we got for the URL.
+        for key, value in details.items():
+            if key == 'whois':
+                emails += value
+            if isinstance(value, dict):
+                # If we have a dictionary here value probably contains information about the IP
+                if 'whois' in value:
+                    emails += value['whois']
+                if 'bgpranking' in value:
+                    asns.append('{} ({})'.format(value['bgpranking'][2], value['bgpranking'][0]))
+emails = list(set(emails))
+asns = list(set(asns))
+
+text = defang(urllib.quote(response['mail']))
+d = {'details': text}
 
 try:
     f = open(template)
     subject = f.readline().rstrip()
-    templatecontent = Template( f.read() )
+    templatecontent = Template(f.read())
     body = templatecontent.substitute(d)
-except:
-    print "Couldn't open template file (%s)" % template
+except Exception:
+    print("Couldn't open template file (%s)" % template)
     sys.exit(1)
 f.close()
 
-#print emails
-#emails = "sascha@rommelfangen.de"
+# print emails
+# emails = "sascha@rommelfangen.de"
 
-asn_out=[]
-for x in asn:
-    asn_out.append(",".join(x))
-asn_out = "|".join(asn_out)
+asn_out = "|".join(asns)
 subject = "%s (%s)" % (subject, asn_out)
 content = {
     'content': {
@@ -155,21 +170,21 @@ try:
     logger.info(response.parsed)
     for t in response.parsed:
         ticketid = t[0][1]
-    print "Ticket created: %s" % ticketid
+    print("Ticket created: %s" % ticketid)
 except RTResourceError as e:
     logger.error(e.response.status_int)
     logger.error(e.response.status)
     logger.error(e.response.parsed)
 
 
-#update ticket link
+# update ticket link
 content = {
     'content': {
         'memberof': incident,
     }
 }
 try:
-    ticketpath="%s/links" % ticketid
+    ticketpath = "%s/links" % ticketid
     response = resource.post(path=ticketpath, payload=content,)
     logger.info(response.parsed)
 except rtresourceerror as e:
