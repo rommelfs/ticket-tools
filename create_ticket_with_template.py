@@ -5,16 +5,12 @@ from defang import defang
 from defang import refang
 import os
 
-import urllib
-import urllib2
-
 from pyurlabuse import PyURLAbuse
 
-from rtkit.resource import RTResource
-from rtkit.authenticators import CookieAuthenticator
-from rtkit.errors import RTResourceError
+from urllib.parse import quote
+import rt
+import requests
 
-from rtkit import set_logging
 import logging
 import sphinxapi
 
@@ -53,12 +49,10 @@ debug = False
 
 def is_online(resource):
     try:
-        global ua
-        global min_size
-        request = urllib2.Request(resource)
-        request.add_header('User-agent', ua)
-        response = urllib2.urlopen(request)
-        size = len(response.read())
+        session = requests.Session()
+        session.headers.update({'User-agent': ua})
+        response = session.get(resource)
+        size = len(response.content)
         if int(size) > min_size:
             return True, size
         else:
@@ -69,9 +63,9 @@ def is_online(resource):
 
 
 # RT
-set_logging('error')
 logger = logging.getLogger('rtkit')
-resource = RTResource(rt_url, rt_user, rt_pass, CookieAuthenticator)
+tracker = rt.Rt(rt_url, rt_user, rt_pass)
+tracker.login()
 
 # Sphinx
 client = sphinxapi.SphinxClient()
@@ -82,13 +76,10 @@ client.SetMatchMode(2)
 def is_ticket_open(id):
     status = False
     try:
-        ticket = "ticket/%s" % id
-        response = resource.get(path=ticket)
-        for r in response.parsed:
-            l = {a: b for a, b in r}
-            ticket_status = l["Status"]
-            if ticket_status == "open" or ticket_status == "new":
-                status = id
+        response = tracker.get_ticket(id)
+        ticket_status = response['Status']
+        if ticket_status == "open" or ticket_status == "new":
+            status = id
     except Exception:
         return False
     return status
@@ -116,26 +107,12 @@ if onlinecheck is True:
         print("Resource %s is offline (size: %s)" % (url, size))
         sys.exit(1)
 
-response = PyURLAbuse.run_query(url, return_mail_template=True)
+response = PyURLAbuse.run_query(url, digest=True)
 
-emails = []
-asns = []
-for entry in response['result']:
-    for url, details in entry.items():
-        # Details contains the information we got for the URL.
-        for key, value in details.items():
-            if key == 'whois':
-                emails += value
-            if isinstance(value, dict):
-                # If we have a dictionary here value probably contains information about the IP
-                if 'whois' in value:
-                    emails += value['whois']
-                if 'bgpranking' in value:
-                    asns.append('{} ({})'.format(value['bgpranking'][2], value['bgpranking'][0]))
-emails = list(set(emails))
-asns = list(set(asns))
+emails = response['digest'][1]
+asns = response['digest'][2]
 
-text = defang(urllib.quote(response['mail']))
+text = defang(quote(response['digest']))
 d = {'details': text}
 
 try:
@@ -151,13 +128,12 @@ f.close()
 # print emails
 # emails = "sascha@rommelfangen.de"
 
-asn_out = "|".join(asns)
-subject = "%s (%s)" % (subject, asn_out)
+subject = "%s (%s)" % (subject, "|".join(asns))
 content = {
     'content': {
         'queue': queue,
         'requestor': emails,
-        'subject': urllib.quote(subject),
+        'subject': quote(subject),
         'text': body,
     }
 }
@@ -166,15 +142,10 @@ if debug:
     sys.exit(42)
 
 try:
-    response = resource.post(path='ticket/new', payload=content,)
-    logger.info(response.parsed)
-    for t in response.parsed:
-        ticketid = t[0][1]
+    ticketid = tracker.create_ticket(**content)
     print("Ticket created: %s" % ticketid)
-except RTResourceError as e:
-    logger.error(e.response.status_int)
-    logger.error(e.response.status)
-    logger.error(e.response.parsed)
+except rt.RtError as e:
+    logger.error(e)
 
 
 # update ticket link
@@ -184,11 +155,9 @@ content = {
     }
 }
 try:
-    ticketpath = "%s/links" % ticketid
-    response = resource.post(path=ticketpath, payload=content,)
-    logger.info(response.parsed)
-except rtresourceerror as e:
-    logger.error(e.response.status_int)
-    logger.error(e.response.status)
-    logger.error(e.repoinse.parsed)
+    response = tracker.edit_ticket_links(ticketid, **content)
+    logger.info(response)
+except rt.RtError as e:
+    logger.error(e)
 
+tracker.logout()
