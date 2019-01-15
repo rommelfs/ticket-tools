@@ -1,8 +1,17 @@
 #!/bin/bash 
 . ./inc_rt.conf
 . ./inc_xmpp.conf
+. ./inc_external.conf
+
 URLLIST=""
 multi="False"
+
+take_screenshot () {
+    URL="`echo $1|sed -e 's/&/\&/g'`"
+    SCREENSHOT=`faup -f host $URL`
+    export URL; ssh ${SCREENSHOT_QUERY_USER}@${SCREENSHOT_SERVER} "$URL" && scp ${SCREENSHOT_FETCH_USER}@${SCREENSHOT_SERVER}:~/screenshots/${SCREENSHOT}.png screenshots/
+    $RT_BIN comment $tn -m "screenshot of $URL" -a screenshots/${SCREENSHOT}.png
+}
 
 show_actions () {
     URL="$1"
@@ -27,6 +36,7 @@ show_actions () {
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents" 
         $RT_BIN edit $tn set CF-Classification="Phishing"
+        take_screenshot $URL
         ;;
     2)  echo "Malware server take-down request"
         $CREATETICKET_BIN $tn $TEMPLATE_MALWARE $URL False
@@ -39,12 +49,14 @@ show_actions () {
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
+        take_screenshot $URL
         ;;
-    4)  echo "Defaced server take-down request"
+    4)  echo "Compromised server take-down request"
         $CREATETICKET_BIN $tn $TEMPLATE_COMPROMISED_WEBSHELL $URL False
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
+        take_screenshot $URL
         ;;
     8)  ;;
     9)  $RT_BIN comment $tn -m "URL unreachable at time of testing or not considered malicious"
