@@ -10,7 +10,6 @@ The submission is checked by `UrlAbuse` and offers the possibility to
 - exit the program (start next time at the ticket where exited)
 
 The tool relies on a working version of `create_ticket_with_template.py`
-This tool deprecates the following three tools.
 
 ### create_ticket_with_template.py
 
