@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import sys
 from string import Template
 from defang import defang
@@ -64,7 +64,7 @@ def is_online(resource):
 
 # RT
 logger = logging.getLogger('rtkit')
-tracker = rt.Rt(rt_url, rt_user, rt_pass)
+tracker = rt.Rt(rt_url, rt_user, rt_pass, verify_cert=False)
 tracker.login()
 
 # Sphinx
@@ -107,12 +107,15 @@ if onlinecheck is True:
         print("Resource %s is offline (size: %s)" % (url, size))
         sys.exit(1)
 
-response = PyURLAbuse.run_query(url, digest=True)
+my_pyurlabuse = PyURLAbuse()
+response = my_pyurlabuse.run_query(url, with_digest=True)
 
 emails = response['digest'][1]
 asns = response['digest'][2]
-
-text = defang(quote(response['digest']))
+print(emails)
+print(asns)
+print(response['digest'][0])
+text = defang(quote(response['digest'][0]))
 d = {'details': text}
 
 try:
@@ -129,33 +132,20 @@ f.close()
 # emails = "sascha@rommelfangen.de"
 
 subject = "%s (%s)" % (subject, "|".join(asns))
-content = {
-    'content': {
-        'queue': queue,
-        'requestor': emails,
-        'subject': quote(subject),
-        'text': body,
-    }
-}
 
 if debug:
     sys.exit(42)
 
 try:
-    ticketid = tracker.create_ticket(**content)
+    ticketid = tracker.create_ticket(Queue=queue, Subject=quote(subject), Text=body, Requestors=emails)
     print("Ticket created: %s" % ticketid)
 except rt.RtError as e:
     logger.error(e)
 
 
 # update ticket link
-content = {
-    'content': {
-        'memberof': incident,
-    }
-}
 try:
-    response = tracker.edit_ticket_links(ticketid, **content)
+    response = tracker.edit_ticket_links(ticketid, MemberOf=incident)
     logger.info(response)
 except rt.RtError as e:
     logger.error(e)
