@@ -12,6 +12,18 @@ The submission is checked by `UrlAbuse` and offers the possibility to
 The tool relies on a working version of `create_ticket_with_template.py`
 This tool deprecates the following three tools.
 
+### create_ticket_with_template.py
+
+`create_ticket_with_template.py` 
+`Usage: create_ticket_with_template.py Incident-ID Templatename URL [Onlinecheck:True|False] [Queue]`
+
+This tools creates a take-down request as an investigation to an incident (`Incident-ID`). It uses the given `Templatename` (from `./templates`).
+The input is based on the given `URL`, which is checked with `UrlAbuse`. The verification of the content being online can be skipeed (`False`).
+A specific queue can be mentioned (default is 5).
+
+Requires `UrlAbuse` from https://github.com/CIRCL/url-abuse
+
+
 
 ### get-urlabuse-reports.sh (deprecated)
 `get-urlabuse-reports.sh` is a standalone tool to iterate through new `UrlAbuse` submissions (https://www.circl.lu/urlabuse/ and https://www.circl.lu/services/urlabuse/) from users to the ticket system.
@@ -30,17 +42,6 @@ The submission is checked by `UrlAbuse` and offers the possibility to
 - exit the program (start next time at the ticket where exited)
 
 The tool relies on a working version of `create_ticket_with_template.py`
-
-### create_ticket_with_template.py (deprecated)
-
-`create_ticket_with_template.py` 
-`Usage: create_ticket_with_template.py Incident-ID Templatename URL [Onlinecheck:True|False] [Queue]`
-
-This tools creates a take-down request as an investigation to an incident (`Incident-ID`). It uses the given `Templatename` (from `./templates`).
-The input is based on the given `URL`, which is checked with `UrlAbuse`. The verification of the content being online can be skipeed (`False`).
-A specific queue can be mentioned (default is 5).
-
-Requires `UrlAbuse` from https://github.com/CIRCL/url-abuse
 
 ## create_bulk_ticket_with_template.py
 
