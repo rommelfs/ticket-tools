@@ -7,12 +7,13 @@ import os
 
 from pyurlabuse import PyURLAbuse
 
-from urllib.parse import quote
 import rt
 import requests
 
 import logging
 import sphinxapi
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 if len(sys.argv) < 4:
     print("Usage: %s Incident-ID Templatename URL [Onlinecheck:True|False] [Queue]" % sys.argv[0])
@@ -110,12 +111,9 @@ if onlinecheck is True:
 my_pyurlabuse = PyURLAbuse()
 response = my_pyurlabuse.run_query(url, with_digest=True)
 
-emails = response['digest'][1]
+emails = ",".join([email.strip('.') for email in response['digest'][1]])
 asns = response['digest'][2]
-print(emails)
-print(asns)
-print(response['digest'][0])
-text = defang(quote(response['digest'][0]))
+text = defang(response['digest'][0])
 d = {'details': text}
 
 try:
@@ -129,18 +127,18 @@ except Exception:
 f.close()
 
 # print emails
-# emails = "sascha@rommelfangen.de"
+#emails = "sascha@rommelfangen.de"
 
 subject = "%s (%s)" % (subject, "|".join(asns))
 
 if debug:
     sys.exit(42)
 
-try:
-    ticketid = tracker.create_ticket(Queue=queue, Subject=quote(subject), Text=body, Requestors=emails)
-    print("Ticket created: %s" % ticketid)
-except rt.RtError as e:
-    logger.error(e)
+#try:
+ticketid = tracker.create_ticket(Queue=queue, Subject=subject, Text=body, Requestors=emails)
+print("Ticket created: {}".format(ticketid))
+#except rt.RtError as e:
+#    logger.error(e)
 
 
 # update ticket link
