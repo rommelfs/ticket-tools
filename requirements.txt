@@ -1,0 +1,3 @@
+git+https://github.com/CIRCL/url-abuse.git/#egg=pyurlabuse&subdirectory=client
+requests
+rt

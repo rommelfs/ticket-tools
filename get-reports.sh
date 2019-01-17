@@ -1,7 +1,74 @@
 #!/bin/bash 
 . ./inc_rt.conf
 . ./inc_xmpp.conf
+. ./inc_external.conf
+
 URLLIST=""
+multi="False"
+
+take_screenshot () {
+    URL="`echo $1|sed -e 's/&/\&/g'`"
+    SCREENSHOT=`faup -f host $URL`
+    export URL; ssh ${SCREENSHOT_QUERY_USER}@${SCREENSHOT_SERVER} "$URL" && scp ${SCREENSHOT_FETCH_USER}@${SCREENSHOT_SERVER}:~/screenshots/${SCREENSHOT}.png screenshots/
+    $RT_BIN comment $tn -m "screenshot of $URL" -a screenshots/${SCREENSHOT}.png
+}
+
+show_actions () {
+    URL="$1"
+    URL=`echo $URL|sed -e "s/h[xX][xX]p\:/http\:/"`
+    URL=`echo $URL|sed -e "s/h[xX][xX]ps\:/https\:/"`
+    echo "Reported URL: $URL"
+    URL_RF=`echo "$URL" | defang -r`
+    if [[ ! $URL == $URL_RF ]]
+    then
+      URL=$URL_RF
+      echo "Refanged URL: $URL"
+    fi
+    UA_RESULT="`echo $URL | $URLABUSE_BIN`"
+    echo "$UA_RESULT"
+    echo "Take-down consideration for $URL"
+    echo "Emails:"
+    echo "$UA_RESULT" | grep "All emails" | cut -d ":" -f2
+    read -rsn1 -p"press (1) phishing, (2) malware, (3) defacement, (4) webshell - (8) ignore, (9) ignore and close, (0) exit" option;echo
+    case $option in
+    1)  echo "Phishing server take-down request"
+        $CREATETICKET_BIN $tn $TEMPLATE_PHISHING $URL False
+        #/opt/rt4/bin/rt resolve $tn
+        $RT_BIN edit $tn set queue="Incidents" 
+        $RT_BIN edit $tn set CF-Classification="Phishing"
+        take_screenshot $URL
+        ;;
+    2)  echo "Malware server take-down request"
+        $CREATETICKET_BIN $tn $TEMPLATE_MALWARE $URL False
+        #/opt/rt4/bin/rt resolve $tn
+        $RT_BIN edit $tn set queue="Incidents"
+        $RT_BIN edit $tn set CF-Classification="Malware"
+        ;;
+    3)  echo "Defaced server take-down request"
+        $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT $URL False
+        #/opt/rt4/bin/rt resolve $tn
+        $RT_BIN edit $tn set queue="Incidents"
+        $RT_BIN edit $tn set CF-Classification="System Compromise"
+        take_screenshot $URL
+        ;;
+    4)  echo "Compromised server take-down request"
+        $CREATETICKET_BIN $tn $TEMPLATE_COMPROMISED_WEBSHELL $URL False
+        #/opt/rt4/bin/rt resolve $tn
+        $RT_BIN edit $tn set queue="Incidents"
+        $RT_BIN edit $tn set CF-Classification="System Compromise"
+        take_screenshot $URL
+        ;;
+    8)  ;;
+    9)  $RT_BIN comment $tn -m "URL unreachable at time of testing or not considered malicious"
+        $RT_BIN resolve $tn
+        ;;
+    0)  exit
+        ;;
+    *)  echo "unrecognized option"
+        ;;
+    esac  
+}
+
 if [[ -z "$1" ]]
 then
     echo "Usage: $0 [report-type|ticket-id]"
@@ -9,6 +76,13 @@ then
     cat get-reports.inc |grep ")"| cut -d ")" -f1 |grep -v "*"
     exit 1
 fi
+
+re='^[0-9]+$'
+if [[ "$1" =~ $re ]]
+then
+  multi="True"
+fi
+
 . ./get-reports.inc "$1"
 if [[ $LAST = "No matching results." ]]
 then
@@ -78,12 +152,13 @@ then
           echo "Topic: $SS_TOPIC"
           echo "Template: $SS_PATH"
           echo "Master Ticket: $SS_TICKET"
-          $CREATE_BULK_BIN $SS_TICKET $SS_PATH $tmpfile_csv
+          $CREATE_BULK_BIN $SS_TICKET $SS_PATH $tmpfile_csv 1 
           $RT_BIN resolve $tn
           rm $tmpfile_csv
       fi
     done
     IFS="$OLD_IFS"
+    $RT_BIN resolve $tn
   done
   exit 0
 fi
@@ -95,49 +170,30 @@ do
     let nb_tickets=nb_tickets-$i
     echo -e "\nProcessing tiket #$tn ($nb_tickets left to process)"
     echo "Processing ticket #$tn"
-    URL=`$RT_BIN show $tn |egrep -o "h[txX][txX]ps?://[^ ]+" | head -n 1` 
-    if [ -z $URL ]
+    if [ "$multi" == "False" ]
     then
-        echo "We should have a URL, but there is none. Something is wrong."
-        exit 1
-    fi 
-    #./rt show $tn 
-    URL=`echo $URL|sed -e "s/h[xX][xX]p\:/http\:/"`
-    URL=`echo $URL|sed -e "s/h[xX][xX]ps\:/https\:/"`
-    echo $URL
-    UA_RESULT="`echo $URL | $URLABUSE_BIN`"
-    echo "$UA_RESULT"
-    echo "Take-down consideration"
-    echo "Emails" 
-    echo "$UA_RESULT" | grep "All emails" | cut -d ":" -f2
-    read -rsn1 -p"press (1) for phishing, (2) for malware, (3) for defacement, (8) ignore, (9) ignore and close, (0) for exit" option;echo
-    case $option in
-    1)  echo "Phishing server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_PHISHING $URL False
-        #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents" 
-        $RT_BIN edit $tn set CF-Classification="Phishing"
-        ;;
-    2)  echo "Malware server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_MALWARE $URL False
-        #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents"
-        $RT_BIN edit $tn set CF-Classification="Malware"
-        ;;
-    3)  echo "Defaced server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT $URL False
-        #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents"
-        $RT_BIN edit $tn set CF-Classification="System Compromise"
-        ;;
-    8)  ;;
-    9)  $RT_BIN comment $tn -m "URL unreachable at time of testing or not considered malicious"
-        $RT_BIN resolve $tn
-        ;;
-    0)  exit
-        ;;
-    *)  echo "unrecognized option"
-        ;;
-    esac  
+        URL=`$RT_BIN show $tn |egrep -o "h[txX][txX]ps?://[^ ]+" | head -n 1` 
+        if [ -z $URL ]
+        then
+            echo "We should have a URL, but there is none. Something is wrong."
+            URL="invalid.tld"
+            #exit 1
+        fi 
+        show_actions $URL 
+    else
+        URLS=`$RT_BIN show $tn |egrep -o "h[txX][txX]ps?://[^ ]+"`
+        for URL in $URLS
+        do
+            echo $URL
+            if [ -z $URL ]
+            then
+                echo "We should have a URL, but there is none. Something is wrong."
+                URL="invalid.tld"
+                #exit 1
+            fi 
+            #./rt show $tn 
+            show_actions $URL 
+        done
+    fi
     let i=i+1
 done

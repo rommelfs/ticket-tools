@@ -1,0 +1,4 @@
+#!/bin/bash
+export SCREENSHOT_QUERY_USER="user"
+export SCREENSHOT_FETCH_USER="password"
+export SCREENSHOT_SERVER="your_screenshot_server_ip"
