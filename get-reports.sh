@@ -172,7 +172,7 @@ do
     echo "Processing ticket #$tn"
     if [ "$multi" == "False" ]
     then
-        URL=`$RT_BIN show $tn |egrep -o "h[txX][txX]ps?://[^ ]+" | head -n 1` 
+        URL=`$RT_BIN show $tn |grep -v "www.virustotal.com" | egrep -o 'h[txX][txX]ps?://[^ :"]+' | head -n 1` 
         if [ -z $URL ]
         then
             echo "We should have a URL, but there is none. Something is wrong."
