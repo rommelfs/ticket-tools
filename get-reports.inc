@@ -11,6 +11,9 @@ Avalanche, $TEMPLATE_DIR/cb_malware-compromised-avalance-client.tmpl, 582867"
 
 SHADOWSERVER_TOPICS="NTP Monitor, $TEMPLATE_DIR/ss_ntp-monitor.tmpl, 582270
 Accessible Cisco Smart Install, $TEMPLATE_DIR/ss_accessible-cisco-smart-install.tmpl, 582271
+Accessible CWMP, $TEMPLATE_DIR/ss_accessible-cwmp.tmpl, 582971
+Open mDNS Servers, $TEMPLATE_DIR/ss_accessible-mdns.tmpl, 582968
+Hadoop Service, $TEMPLATE_DIR/ss_accessible-hadoop.tmpl, 582973
 Spam URL, $TEMPLATE_DIR/ss_spam-url.tmpl, 582792 
 Compromised Website, $TEMPLATE_DIR/ss_compromised-website.tmpl, 582938 
 Open Redis Server, $TEMPLATE_DIR/ss_open-redis-server.tmpl, 582939
@@ -19,14 +22,11 @@ Open TFTP Server, $TEMPLATE_DIR/ss_open-tftp-servers.tmpl, 582953
 Vulnerable NAT-PMP Systems, $TEMPLATE_DIR/ss_vulnerable-nat-pmp-systems.tmpl, 582764 
 Open Memcached Server, $TEMPLATE_DIR/ss_open-memcached-server.tmpl, 582961
 Open MS-SQL Server, $TEMPLATE_DIR/ss_open-mssql-server.tmpl, 582962
+Open Portmapper Scan, $TEMPLATE_DIR/ss_open-portmapper.tmpl, 582967
 Accessible/Open MongoDB Service, $TEMPLATE_DIR/ss_open-mongodb-service.tmpl, 582963
 Open Elasticsearch Server, $TEMPLATE_DIR/ss_open-elasticsearch-server.tmpl, 582966
 Open LDAP Services, $TEMPLATE_DIR/ss_open-ldap-server.tmpl, 582970"
 
-#Accessible CWMP, $TEMPLATE_DIR/defaced_website.tmpl, 582971
-#Hadoop Service, $TEMPLATE_DIR/defaced_website.tmpl, 582973
-#Open Portmapper Scan, $TEMPLATE_DIR/defaced_website.tmpl, 582967
-#Open mDNS Servers, $TEMPLATE_DIR/defaced_website.tmpl, 582968
 #SMB Service, $TEMPLATE_DIR/defaced_website.tmpl, 582974
 #VNC Service, $TEMPLATE_DIR/defaced_website.tmpl, 582975
 #Drone Report, $TEMPLATE_DIR/defaced_website.tmpl, 582940

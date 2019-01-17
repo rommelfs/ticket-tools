@@ -1,0 +1,30 @@
+Abuse report: Accessible Hadoop servers in your network 
+Dear Abuse teams,
+ 
+ CIRCL is the CERT/CSIRT (Computer Emergency Response Team/Computer Security Incident Response Team) for the private sector, communes and non-governmental entities in Luxembourg.
+ 
+ We have been informed by a trusted source that at the time of writing the following list of IP(s) appear to be publicly accessible Hadoop server. 
+
+  $details
+
+ Machines have either the NameNode or DataNode web interfaces running and accessible to the world on the Internet. At a minimum, this can allow for information gathering against the target organization. In other instances, it may allow a miscreant to manipulate the Hadoop instance.
+
+ What are possible solutions?
+ 
+ (1) Disable the service if not needed
+
+ (2) Implement access lists to restrict access to this service
+
+ 
+ Don't hesitate to get back to us if you have further questions or need additional support or want to inform us about false positives.
+ 
+ We would appreciate if you confirm the reception of this report.
+ 
+ [1] https://www.shadowserver.org/wiki/pmwiki.php/Services/Accessible-Hadoop
+ [2] https://hadoopscan.shadowserver.org/
+
+ With kind regards,
+ --
+ CIRCL - Computer Incident Response Center Luxembourg
+ 16, boulevard d'Avranches - L-1160 Luxembourg
+ http://www.circl.lu/
