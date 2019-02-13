@@ -10,7 +10,7 @@ A collection of tools interfacing with RT/RTIR in order to interact with the wor
 - `sed`, `cut`, `grep`
 - `faup` from https://github.com/stricaud/faup
 - Python >=3.4
-- Python dependencies: `string`, `defang`, `pyurlabuse`, `rt`, `requests`, `logging`, `sphinxapi`, `urllib3`
+- Python dependencies: `string`, `ioc_fanger`, `pyurlabuse`, `rt`, `requests`, `logging`, `sphinxapi`, `urllib3`
 
 ## Outlook
 More tools are likely to be released
