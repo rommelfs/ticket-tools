@@ -1,11 +1,16 @@
 #!/usr/bin/python3
 import sys
 from string import Template
-from defang import defang
-from defang import refang
+import ioc_fanger
+
 import os
 
 from pyurlabuse import PyURLAbuse
+from pymisp import PyMISP, MISPEvent, MISPObject
+from keys import misp_url, misp_key, misp_verifycert
+
+from io import BytesIO
+import datetime
 
 import rt
 import requests
@@ -13,6 +18,8 @@ import requests
 import logging
 import sphinxapi
 import urllib3
+from pyfaup.faup import Faup
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 if len(sys.argv) < 4:
@@ -30,10 +37,13 @@ try:
     queue = sys.argv[5]
 except Exception:
     queue = 5
+try:
+    misp_id = sys.argv[6]
+except Exception:
+    misp_id = False
 
 mypath = os.path.dirname(os.path.realpath(sys.argv[0]))
 template = os.path.join(mypath, template)
-
 
 # Config
 min_size = 5000
@@ -47,6 +57,8 @@ sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
 debug = False
 
+def init(url, key):
+    return PyMISP(url, key, misp_verifycert, 'json')
 
 def is_online(resource):
     try:
@@ -77,8 +89,8 @@ client.SetMatchMode(2)
 def is_ticket_open(id):
     status = False
     try:
-        response = tracker.get_ticket(id)
-        ticket_status = response['Status']
+        rt_response = tracker.get_ticket(id)
+        ticket_status = rt_response['Status']
         if ticket_status == "open" or ticket_status == "new":
             status = id
     except Exception:
@@ -110,10 +122,9 @@ if onlinecheck is True:
 
 my_pyurlabuse = PyURLAbuse()
 response = my_pyurlabuse.run_query(url, with_digest=True)
-
 emails = ",".join([email.strip('.') for email in response['digest'][1]])
 asns = response['digest'][2]
-text = defang(response['digest'][0])
+text = ioc_fanger.defang(response['digest'][0])
 d = {'details': text}
 
 try:
@@ -143,9 +154,46 @@ print("Ticket created: {}".format(ticketid))
 
 # update ticket link
 try:
-    response = tracker.edit_ticket_links(ticketid, MemberOf=incident)
-    logger.info(response)
+    rt_response = tracker.edit_ticket_links(ticketid, MemberOf=incident)
+    logger.info(rt_response)
 except rt.RtError as e:
     logger.error(e)
 
 tracker.logout()
+
+if misp_id is not False:
+    misp = init(misp_url, misp_key)
+    event = misp.get(misp_id)
+    existing_event = MISPEvent()
+    existing_event.load(event)
+    redirect_count = 0
+
+    fex = Faup()
+    fex.decode(url)
+    hostname = fex.get_host().lower()
+    screenshot = hostname.decode() + '.png'
+
+    mispObject = MISPObject('phishing')
+    for key in response['result']:
+        if redirect_count == 0:
+            comment = "initial URL"
+        else:
+            comment = "redirect URL: {}"
+        u = list(key.keys())[0]
+        mispObject.add_attribute('url', value=u, comment=comment.format(redirect_count))
+        redirect_count += 1
+    #mispObject.add_attribute('hostname', value=hostname)a
+    for email in response['digest'][1]:
+        mispObject.add_attribute('takedown-request-to', value=email)
+    try:
+        mispObject.add_attribute('screenshot', value=screenshot, data=BytesIO(open('screenshots/' + screenshot, 'rb').read()))
+    except:
+        pass
+    mispObject.add_attribute('verification-time', value=datetime.datetime.now().isoformat())
+    mispObject.add_attribute('takedown-request', value=datetime.datetime.now().isoformat())
+    mispObject.add_attribute('internal reference', value=incident, distribution=0)
+    mispObject.add_attribute('online', value="Yes")
+    mispObject.add_attribute('verified', value="Yes")
+    existing_event.add_object(mispObject)
+
+    misp.update(existing_event)
