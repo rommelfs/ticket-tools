@@ -50,6 +50,9 @@ Open LDAP Services, $TEMPLATE_DIR/ss_open-ldap-server.tmpl, 582970"
 #ISAKMP Vulnerability Scan, $TEMPLATE_DIR/defaced_website.tmpl, 582969
 #Blacklisted IP Addresses, $TEMPLATE_DIR/defaced_website.tmpl, 582976
 
+MISP_PHISHING_ID="13768"
+REPLACED_DOMAIN="taggingserver\.com"
+
 RT_BIN="/opt/rt4/bin/rt"
 case "$1" in 
 "phishlabs")    LAST=`$RT_BIN list "(Status='new' or Status='open') and Queue='General' and Requestor.EmailAddress='soc@phishlabs.com'" -f ticket |grep -v "id" |tail -n 5000`
