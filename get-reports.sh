@@ -18,7 +18,12 @@ show_actions () {
     URL=`echo $URL|sed -e "s/h[xX][xX]p\:/http\:/"`
     URL=`echo $URL|sed -e "s/h[xX][xX]ps\:/https\:/"`
     echo "Reported URL: $URL"
-    URL_RF=`echo "$URL" | defang -r`
+    while read reps
+    do
+        URL="`echo $URL | sed -e \"s/$reps/$REPLACED_DOMAIN/g\"`"
+    done < get-reports.replacements
+    echo "Sanitized URL: $URL"
+    URL_RF=`fang "$URL"`
     if [[ ! $URL == $URL_RF ]]
     then
       URL=$URL_RF
@@ -32,27 +37,28 @@ show_actions () {
     read -rsn1 -p"press (1) phishing, (2) malware, (3) defacement, (4) webshell - (8) ignore, (9) ignore and close, (0) exit" option;echo
     case $option in
     1)  echo "Phishing server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_PHISHING $URL False
+        take_screenshot "$URL"
+        echo "$URL"
+        $CREATETICKET_BIN $tn $TEMPLATE_PHISHING "$URL" False 5 $MISP_PHISHING_ID
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents" 
         $RT_BIN edit $tn set CF-Classification="Phishing"
-        take_screenshot $URL
         ;;
     2)  echo "Malware server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_MALWARE $URL False
+        $CREATETICKET_BIN $tn $TEMPLATE_MALWARE "$URL" False 5
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="Malware"
         ;;
     3)  echo "Defaced server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT $URL False
+        $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT "$URL" False 5
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
         take_screenshot $URL
         ;;
     4)  echo "Compromised server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_COMPROMISED_WEBSHELL $URL False
+        $CREATETICKET_BIN $tn $TEMPLATE_COMPROMISED_WEBSHELL "$URL" False 5
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
@@ -168,11 +174,13 @@ for tn in $LAST
 do
     nb_tickets=`echo $LAST | wc -w`
     let nb_tickets=nb_tickets-$i
-    echo -e "\nProcessing tiket #$tn ($nb_tickets left to process)"
+    echo -e "\nProcessing ticket #$tn ($nb_tickets left to process)"
     echo "Processing ticket #$tn"
     if [ "$multi" == "False" ]
     then
-        URL=`$RT_BIN show $tn |grep -v "www.virustotal.com" | egrep -o 'h[txX][txX]ps?://[^ :"]+' | head -n 1` 
+        URL=`$RT_BIN show $tn | egrep -o 'h[txX][txX]ps?://[^ :"]+' | head -n 1` 
+        # If JSON:
+        # URL=`$RT_BIN show $tn |jq -r  '.[] | keys[] '` 
         if [ -z $URL ]
         then
             echo "We should have a URL, but there is none. Something is wrong."
