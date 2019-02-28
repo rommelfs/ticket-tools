@@ -51,6 +51,8 @@ Open LDAP Services, $TEMPLATE_DIR/ss_open-ldap-server.tmpl, 582970"
 #Blacklisted IP Addresses, $TEMPLATE_DIR/defaced_website.tmpl, 582976
 
 MISP_PHISHING_ID="13768"
+MISP_PHISHING_ID_PHISHTANK="13983"
+
 REPLACED_DOMAIN="taggingserver\.com"
 
 RT_BIN="/opt/rt4/bin/rt"
@@ -65,8 +67,18 @@ case "$1" in
     ;;
 "cert-bund")    LAST=`$RT_BIN list "Queue='General' and (Status='new' or Status='open') and Subject like 'CB-Report' and Requestor.EmailAddress='reports@reports.cert-bund.de'" -f ticket |grep -v "id" |tail -n 5000`
     ;;
-''|*[0-9]*) LAST="$1" 
+"phishtank")    LAST="$1"
     ;;
-*)  exit 1
+*)  if [[ "$1" =~ http(s)?:// ]]
+    then 
+      LAST="none"
+      echo "Not implemented yet"
+      exit 1
+    elif [[ "$1" =~ ^[0-9]+$ ]]
+    then
+      LAST="$1"
+    else
+      exit 1
+    fi
     ;;
 esac
