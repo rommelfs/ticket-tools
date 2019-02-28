@@ -7,10 +7,38 @@ URLLIST=""
 multi="False"
 
 take_screenshot () {
-    URL="`echo $1|sed -e 's/&/\&/g'`"
-    SCREENSHOT=`faup -f host $URL`
-    export URL; ssh ${SCREENSHOT_QUERY_USER}@${SCREENSHOT_SERVER} "$URL" && scp ${SCREENSHOT_FETCH_USER}@${SCREENSHOT_SERVER}:~/screenshots/${SCREENSHOT}.png screenshots/
-    $RT_BIN comment $tn -m "screenshot of $URL" -a screenshots/${SCREENSHOT}.png
+    if [ -z "$1" ]
+    then
+        exit 17 
+    else
+        URL="$1"
+        URL="`echo $URL|sed -e 's/&/\&/g'`"
+    fi
+    if [ -z "$2" ] 
+    then
+        FETCH=1
+    else
+        FETCH="$2"
+    fi
+    if [ -z "$3" ]
+    then
+        COMMENT=1
+    else
+        COMMENT="$3"
+    fi
+    SCREENSHOT=`/usr/local/bin/faup -f host "$URL"`
+    echo "$SCREENSHOT"
+    export URL; ssh ${SCREENSHOT_QUERY_USER}@${SCREENSHOT_SERVER} "$URL"
+    if [ $FETCH -eq 1 ]
+    then
+        sleep 2
+        export URL; scp ${SCREENSHOT_FETCH_USER}@${SCREENSHOT_SERVER}:~/screenshots/${SCREENSHOT}.png screenshots/
+        sleep 1
+        if [ $COMMENT -eq 1 ] 
+        then
+            $RT_BIN comment $tn -m "screenshot of $URL" -a screenshots/${SCREENSHOT}.png
+        fi
+    fi
 }
 
 show_actions () {
@@ -18,6 +46,10 @@ show_actions () {
     URL=`echo $URL|sed -e "s/h[xX][xX]p\:/http\:/"`
     URL=`echo $URL|sed -e "s/h[xX][xX]ps\:/https\:/"`
     echo "Reported URL: $URL"
+    while read reps
+    do
+        URL="`echo $URL | sed -e \"s/$reps/someone\@taggingserver\.com/g\"`"
+    done < get-reports.replacements-email
     while read reps
     do
         URL="`echo $URL | sed -e \"s/$reps/$REPLACED_DOMAIN/g\"`"
@@ -39,26 +71,26 @@ show_actions () {
     1)  echo "Phishing server take-down request"
         take_screenshot "$URL"
         echo "$URL"
-        $CREATETICKET_BIN $tn $TEMPLATE_PHISHING "$URL" False 5 $MISP_PHISHING_ID
+        $CREATETICKET_BIN $tn $TEMPLATE_PHISHING "$URL" 0 5 $MISP_PHISHING_ID
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents" 
         $RT_BIN edit $tn set CF-Classification="Phishing"
         ;;
     2)  echo "Malware server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_MALWARE "$URL" False 5
+        $CREATETICKET_BIN $tn $TEMPLATE_MALWARE "$URL" 0 5
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="Malware"
         ;;
     3)  echo "Defaced server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT "$URL" False 5
+        $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT "$URL" 0 5
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
         take_screenshot $URL
         ;;
     4)  echo "Compromised server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_COMPROMISED_WEBSHELL "$URL" False 5
+        $CREATETICKET_BIN $tn $TEMPLATE_COMPROMISED_WEBSHELL "$URL" 0 5
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
@@ -92,8 +124,64 @@ fi
 . ./get-reports.inc "$1"
 if [[ $LAST = "No matching results." ]]
 then
-  echo "No tickets to process."
-  exit
+    echo "No tickets to process."
+    exit
+fi
+
+if [[ "$1" =~ "phishtank" ]]
+then
+  N_REPORTS=0
+  echo "Looking at Phishtank URLs"
+  if [ -f phishtank.lock ]
+  then
+    echo "This script seems to be running alredy. Please check"
+    exit 16
+  fi
+  touch phishtank.lock
+  if [ -f online-valid.json ]
+  then 
+    echo "Move crashfile"
+    mv online-valid.json online-valid.json-crashed
+  fi
+  /usr/bin/wget $PHISHTANK_URL
+  if [ ! -f online-valid.json ]
+  then
+    echo "Couldn't fetch phishtank file. Please check the last output"
+    rm phishtank.lock
+    exit 1
+  fi
+  OLDTIMESTAMP=`cat phishtank.timestamp`
+  MAXTIMESTAMP=$OLDTIMESTAMP
+  while read URL; read TIME
+  do
+    EPOCH=$(date -d "$TIME" +"%s")
+    if [ $EPOCH -gt $OLDTIMESTAMP ]
+    then
+      echo "time: $TIME"
+      echo "epoch: $EPOCH"
+      echo "url: $URL"
+      #take_screenshot "$URL" 0 0
+      $CREATETICKET_BIN $PHISHTANK_TICKET $TEMPLATE_PHISHING "$URL" 2 5 $MISP_PHISHING_ID_PHISHTANK
+      N_REPORTS=$((N_REPORTS+1))
+    fi
+    if [ $EPOCH -gt $MAXTIMESTAMP ]
+    then
+      MAXTIMESTAMP=$EPOCH
+    fi
+  done <<EOT
+$(cat online-valid.json |jq  -r '[.[] | .url, .verification_time ] | .[]')
+EOT
+  echo $MAXTIMESTAMP > phishtank.timestamp
+  if [ $N_REPORTS -gt 0 ]
+  then
+    echo "New reports: $N_REPORTS"
+  else
+    echo "No new reports."
+  fi
+  echo "do backup of phishtank file"
+  mv online-valid.json online-valid.json-previous
+  rm phishtank.lock
+  exit 0 
 fi
 
 if [[ "$1" =~ "cert-bund" ]]
