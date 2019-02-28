@@ -18,6 +18,7 @@ import requests
 import logging
 import sphinxapi
 import urllib3
+import json
 from pyfaup.faup import Faup
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -32,7 +33,7 @@ url = sys.argv[3]
 try:
     onlinecheck = sys.argv[4]
 except Exception:
-    onlinecheck = True
+    onlinecheck = 1 
 try:
     queue = sys.argv[5]
 except Exception:
@@ -110,7 +111,13 @@ def open_tickets_for_url(url):
 
 print("Checking URL: %s" % url)
 
-if onlinecheck is True:
+if onlinecheck == 2:
+    open_tickets = open_tickets_for_url(url)
+    if open_tickets > 0:
+        print("Ticket for this URL (%s) already exists: %s" % (url, open_tickets))
+        sys.exit(0)
+
+if onlinecheck == 1:
     open_tickets = open_tickets_for_url(url)
     if open_tickets > 0:
         print("Ticket for this URL (%s) already exists: %s" % (url, open_tickets))
@@ -163,37 +170,58 @@ tracker.logout()
 
 if misp_id is not False:
     misp = init(misp_url, misp_key)
+    
+    res_search = misp.search(controller='attributes',eventid=misp_id, value=url)
+    uuid = None
+    for attribs in res_search['response']['Attribute']:
+        uuid = attribs['uuid']
+    if uuid is not None:
+        print("URL is already present.")
+        # add sighting
+        # if MISP allows to sight on add, we should implement it here, too
+        misp.sighting(uuid=uuid, source="URLabuse")
+        sys.exit(0)
     event = misp.get(misp_id)
     existing_event = MISPEvent()
     existing_event.load(event)
     redirect_count = 0
-
     fex = Faup()
     fex.decode(url)
     hostname = fex.get_host().lower()
     screenshot = hostname.decode() + '.png'
-
     mispObject = MISPObject('phishing')
+    mispObject.add_attribute('hostname', value=hostname.decode())
     for key in response['result']:
+        u = list(key.keys())[0]
         if redirect_count == 0:
             comment = "initial URL"
+            mispObject.add_attribute('url', value=u, comment=comment)
         else:
             comment = "redirect URL: {}"
-        u = list(key.keys())[0]
-        mispObject.add_attribute('url', value=u, comment=comment.format(redirect_count))
+            mispObject.add_attribute('url-redirect', value=u, comment=comment.format(redirect_count))
         redirect_count += 1
-    #mispObject.add_attribute('hostname', value=hostname)a
+        fex.decode(u)
+        nexthost = fex.get_host().lower()
+        if nexthost != hostname:
+            hostname = nexthost
+            mispObject.add_attribute('hostname', to_ids=False, value=hostname.decode()) 
     for email in response['digest'][1]:
         mispObject.add_attribute('takedown-request-to', value=email)
-    try:
-        mispObject.add_attribute('screenshot', value=screenshot, data=BytesIO(open('screenshots/' + screenshot, 'rb').read()))
-    except:
-        pass
+    screenshot_path = 'screenshots/' + screenshot
+    if os.path.exists(screenshot_path) and os.path.getsize(screenshot_path) > 0: 
+        try:
+            mispObject.add_attribute('screenshot', value=screenshot, data=BytesIO(open(screenshot_path, 'rb').read()))
+        except:
+            pass
     mispObject.add_attribute('verification-time', value=datetime.datetime.now().isoformat())
     mispObject.add_attribute('takedown-request', value=datetime.datetime.now().isoformat())
-    mispObject.add_attribute('internal reference', value=incident, distribution=0)
+    mispObject.add_attribute('internal reference', value=ticketid, distribution=0)
     mispObject.add_attribute('online', value="Yes")
     mispObject.add_attribute('verified', value="Yes")
-    existing_event.add_object(mispObject)
-
-    misp.update(existing_event)
+    misp.add_object(misp_id, mispObject.template_uuid, mispObject)
+    # This is not working in this condition. The event is too large for updating it.
+    # The server gets stuck preparing something, there's a 240s timeout and the server returns a 500.
+    # The above method is better.
+    # existing_event.add_object(mispObject)
+    # misp.update(existing_event)
+    misp.fast_publish(misp_id)
