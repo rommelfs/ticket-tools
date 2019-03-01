@@ -224,4 +224,4 @@ if misp_id is not False:
     # The above method is better.
     # existing_event.add_object(mispObject)
     # misp.update(existing_event)
-    misp.fast_publish(misp_id)
+    #misp.fast_publish(misp_id)
