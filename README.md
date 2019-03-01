@@ -19,7 +19,7 @@ More tools are likely to be released
 
 ## get-reports.sh
 `get-reports.sh` is a standalone tool to iterate through defined submission types. Submission types can be defined as an RT/RTIR search. It keeps a list of definitions in  `get-reports.inc`. There are two modes of operation:
-- Automatic processing of the incoming tickets (e.g. any 30 minutes with a cronjob: `30 * * * * "cd /home/rommelfs/ticket-tools; ./get-reports.sh shadowserver"`)
+- Automatic processing of the incoming tickets (e.g. any 30 minutes with a cronjob: `30 * * * * cd /home/rommelfs/ticket-tools && ./get-reports.sh shadowserver`)
 - Semi-automatic processing (automatic display of a list of open tickets from one category. One-key decision and processing: 
 The submission is checked by `UrlAbuse` and offers the possibility to 
 - automatically create a take-down request based on templates (from `./templates`), the source ticket will be moved to the incident queue. A classification will be added according to the take-down type.
@@ -40,6 +40,8 @@ The tool relies on a working version of `create_ticket_with_template.py`
 This tools creates a take-down request as an investigation to an incident (`Incident-ID`). It uses the given `Templatename` (from `./templates`).
 The input is based on the given `URL`, which is checked with `UrlAbuse`. The verification of the content being online can be skipped (`False`).
 A specific queue can be mentioned (default is 5).
+
+It can also send the contents to a MISP instance.
 
 Requires `UrlAbuse` from https://github.com/CIRCL/url-abuse
 
