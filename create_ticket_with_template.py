@@ -35,7 +35,7 @@ url = sys.argv[3]
 try:
     onlinecheck = sys.argv[4]
 except Exception:
-    onlinecheck = 1 
+    onlinecheck = 1
 try:
     queue = sys.argv[5]
 except Exception:
@@ -79,7 +79,7 @@ def is_online(resource):
 
 
 # RT
-logger = logging.getLogger('rtkit')
+logger = logging.getLogger('rt')
 tracker = rt.Rt(rt_url, rt_user, rt_pass, verify_cert=False)
 tracker.login()
 
@@ -180,7 +180,7 @@ tracker.logout()
 
 if misp_id is not False:
     misp = init(misp_url, misp_key)
-    
+
     res_search = misp.search(controller='attributes',eventid=misp_id, value=url)
     uuid = None
     # The following needs fixes for ExpandedPyMisp
@@ -192,7 +192,7 @@ if misp_id is not False:
         # if MISP allows to sight on add, we should implement it here, too
         misp.sighting(uuid=uuid, source="URLabuse")
         sys.exit(0)
-    # This is obsolete 
+    # This is obsolete
     #event = misp.get(misp_id)
     #existing_event = MISPEvent()
     #existing_event.load(event)
@@ -216,11 +216,11 @@ if misp_id is not False:
         nexthost = fex.get_host().lower()
         if nexthost != hostname:
             hostname = nexthost
-            mispObject.add_attribute('hostname', to_ids=False, value=hostname.decode()) 
+            mispObject.add_attribute('hostname', to_ids=False, value=hostname.decode())
     for email in response['digest'][1]:
         mispObject.add_attribute('takedown-request-to', value=email)
     screenshot_path = 'screenshots/' + screenshot
-    if os.path.exists(screenshot_path) and os.path.getsize(screenshot_path) > 0: 
+    if os.path.exists(screenshot_path) and os.path.getsize(screenshot_path) > 0:
         try:
             mispObject.add_attribute('screenshot', value=screenshot, data=BytesIO(open(screenshot_path, 'rb').read()))
         except:

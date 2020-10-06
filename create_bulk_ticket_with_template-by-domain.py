@@ -33,7 +33,7 @@ excludelist = cfg.known_good_excludelist
 debug = True
 
 # RT
-logger = logging.getLogger('rtkit')
+logger = logging.getLogger('rt')
 tracker = rt.Rt(rt_url, rt_user, rt_pass, verify_cert=False)
 tracker.login()
 
