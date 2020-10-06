@@ -6,6 +6,7 @@ TEMPLATE_PHISHING="$TEMPLATE_DIR/phishing_server.tmpl"
 TEMPLATE_MALWARE="$TEMPLATE_DIR/malicious_files_hosted.tmpl"
 TEMPLATE_DEFACEMENT="$TEMPLATE_DIR/defaced_website.tmpl"
 TEMPLATE_COMPROMISED_WEBSHELL="$TEMPLATE_DIR/compromised_website-with-webshell.tmpl"
+TEMPLATE_CYBERSQUATTING="$TEMPLATE_DIR/cybersquatting.tmpl"
 CERTBUND_TOPICS="Malware infections in country, $TEMPLATE_DIR/cb_malware-infections.tmpl, 582865
 Avalanche, $TEMPLATE_DIR/cb_malware-compromised-avalance-client.tmpl, 582867"
 
@@ -50,24 +51,37 @@ Open LDAP Services, $TEMPLATE_DIR/ss_open-ldap-server.tmpl, 582970"
 #ISAKMP Vulnerability Scan, $TEMPLATE_DIR/defaced_website.tmpl, 582969
 #Blacklisted IP Addresses, $TEMPLATE_DIR/defaced_website.tmpl, 582976
 
-MISP_PHISHING_ID="13768"
-MISP_PHISHING_ID_PHISHTANK="13983"
+MISP_PHISHING_ID="79955"
+MISP_PHISHING_ID_PHISHTANK="79953"
 
 REPLACED_DOMAIN="taggingserver\.com"
 
 RT_BIN="/opt/rt4/bin/rt"
 case "$1" in 
+"check")    LAST=`$RT_BIN list "Queue='Incidents' and (Status='new' or Status='open') and ( Requestor.EmailAddress like '@netcraft.com' or Requestor.EmailAddress like 'urlabuse@circl.lu' )" -f ticket |grep -v "id" |tail -n 5000`
+    ;;
+
 "phishlabs")    LAST=`$RT_BIN list "(Status='new' or Status='open') and Queue='General' and Requestor.EmailAddress='soc@phishlabs.com'" -f ticket |grep -v "id" |tail -n 5000`
+    ;;
+"lookyloo")     LAST=`$RT_BIN list "((Queue='General' or Queue='Phish & Spam')) and (Status='new' or Status='open') and Subject like 'Capture from Lookyloo to review'" -f ticket |grep -v "id"|tail -n 5000`
     ;;
 "urlabuse")     LAST=`$RT_BIN list "Queue='Z_Autoreport' and (Status='new' or Status='open') and Subject like 'URL Abuse report' and Requestor.EmailAddress='urlabuse@circl.lu'" -f ticket |grep -v "id"|tail -n 5000`
     ;;
 "netcraft")     LAST=`$RT_BIN list "Queue='General' and (Status='new' or Status='open') and Subject like 'Issue' and Requestor.EmailAddress like '@netcraft.com'" -f ticket |grep -v "id" |tail -n 5000`
     ;;
+"validated")     LAST=`$RT_BIN list "Queue='Phish & Spam' and (Status='new' or Status='open') and Cc like 'validated-phishing@circl.lu'" -f ticket |grep -v "id" |tail -n 5000`
+    ;;
+"incibe")   LAST=`$RT_BIN list "Queue='General' and (Status='new' or Status='open') and Subject like 'Phishing' and Requestor.EmailAddress='incidencias@incibe-cert.es'" -f ticket |grep -v "id" |tail -n 5000`
+    ;;
 "shadowserver")     LAST=`$RT_BIN list "Queue='Z_Autoreport' and (Status='new' or Status='open') and Subject like 'Shadowserver Luxembourg (ASN)' and Requestor.EmailAddress like 'autoreports@shadowserver.org'" -f ticket |grep -v "id" |tail -n 5000`
     ;;
 "cert-bund")    LAST=`$RT_BIN list "Queue='General' and (Status='new' or Status='open') and Subject like 'CB-Report' and Requestor.EmailAddress='reports@reports.cert-bund.de'" -f ticket |grep -v "id" |tail -n 5000`
     ;;
+"cert-eu")   LAST=`$RT_BIN list "Queue='Z_autoreport' and (Status='new' or Status='open') and Subject like 'Summary of your network security incidents' and Requestor.EmailAddress='nobody@cert.europa.eu'" -f ticket |grep -v "id" |tail -n 5000`
+    ;;
 "phishtank")    LAST="$1"
+    ;;
+"test")  LAST="1278807"
     ;;
 *)  if [[ "$1" =~ http(s)?:// ]]
     then 

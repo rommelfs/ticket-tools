@@ -61,13 +61,16 @@ show_actions () {
       URL=$URL_RF
       echo "Refanged URL: $URL"
     fi
-    UA_RESULT="`echo $URL | $URLABUSE_BIN`"
-    echo "$UA_RESULT"
+    #UA_RESULT="`echo $URL | $URLABUSE_BIN`"
+    #echo "$UA_RESULT"
     echo "Take-down consideration for $URL"
-    echo "Emails:"
-    echo "$UA_RESULT" | grep "All emails" | cut -d ":" -f2
-    read -rsn1 -p"press (1) phishing, (2) malware, (3) defacement, (4) webshell - (8) ignore, (9) ignore and close, (0) exit" option;echo
+    #echo "Emails:"
+    #echo "$UA_RESULT" | grep "All emails" | cut -d ":" -f2
+    read -rsn1 -p"press (1) phishing, (2) malware, (3) defacement, (4) webshell, (5) cybersquatting - (8) ignore, (9) ignore and close, (e) edit URL, (0) exit" option;echo
     case $option in
+    "e") read -e -p "Edit URL: " -i "$URL" URL
+        show_actions "$URL"
+        ;;
     1)  echo "Phishing server take-down request"
         take_screenshot "$URL"
         echo "$URL"
@@ -96,6 +99,13 @@ show_actions () {
         $RT_BIN edit $tn set CF-Classification="System Compromise"
         take_screenshot $URL
         ;;
+    5)  echo "Cybersquatting take-down request"
+        $CREATETICKET_BIN $tn $TEMPLATE_CYBERSQUATTING "$URL" 0 5
+        #/opt/rt4/bin/rt resolve $tn
+        $RT_BIN edit $tn set queue="Incidents"
+        $RT_BIN edit $tn set CF-Classification="Scam"
+        take_screenshot $URL
+        ;;
     8)  ;;
     9)  $RT_BIN comment $tn -m "URL unreachable at time of testing or not considered malicious"
         $RT_BIN resolve $tn
@@ -117,6 +127,11 @@ fi
 
 re='^[0-9]+$'
 if [[ "$1" =~ $re ]]
+then
+  multi="True"
+fi
+
+if [[ "$1" = "validated" ]]
 then
   multi="True"
 fi
@@ -143,7 +158,7 @@ then
     echo "Move crashfile"
     mv online-valid.json online-valid.json-crashed
   fi
-  /usr/bin/wget $PHISHTANK_URL
+  /usr/bin/wget -4 $PHISHTANK_URL
   if [ ! -f online-valid.json ]
   then
     echo "Couldn't fetch phishtank file. Please check the last output"
@@ -154,6 +169,10 @@ then
   MAXTIMESTAMP=$OLDTIMESTAMP
   while read URL; read TIME
   do
+    echo "URL:  $URL"
+    echo "DATE: $TIME" 
+    #URL=`echo $URL | sed 's/5C//g'`
+    #URL="`echo $URL | tr -d '\\'`"
     EPOCH=$(date -d "$TIME" +"%s")
     if [ $EPOCH -gt $OLDTIMESTAMP ]
     then
@@ -169,7 +188,7 @@ then
       MAXTIMESTAMP=$EPOCH
     fi
   done <<EOT
-$(cat online-valid.json |jq  -r '[.[] | .url, .verification_time ] | .[]')
+$(cat online-valid.json |jq  -r '[.[] | .url, .verification_time ] | .[]'|sed -e "s/\\\//g")
 EOT
   echo $MAXTIMESTAMP > phishtank.timestamp
   if [ $N_REPORTS -gt 0 ]
@@ -246,7 +265,7 @@ then
           echo "Topic: $SS_TOPIC"
           echo "Template: $SS_PATH"
           echo "Master Ticket: $SS_TICKET"
-          $CREATE_BULK_BIN $SS_TICKET $SS_PATH $tmpfile_csv 1 
+          $CREATE_BULK_BIN $SS_TICKET $SS_PATH $tmpfile_csv "1"
           $RT_BIN resolve $tn
           rm $tmpfile_csv
       fi
@@ -257,6 +276,30 @@ then
   exit 0
 fi
 
+if [[ "$1" =~ "cert-eu" ]]
+then
+  for tn in $LAST
+  do
+    echo "Processing ticket: $tn"
+    ATTACHMENT=`$RT_BIN show $tn/attachments | grep .json.zip|cut -d ":" -f 1`
+    echo $ATTACHMENT
+          tmpfile_zip=$(mktemp --suffix=.json.zip /tmp/get_cert-eu.XXXXXX)
+          $RT_BIN show $tn/attachments/$ATTACHMENT/content > $tmpfile_zip
+          tmpfile_json=$(mktemp --suffix=.json /tmp/get_cert-eu.XXXXXX)
+          7z -y -o/tmp -so x $tmpfile_zip > $tmpfile_json 
+          echo $tmpfile_json
+          rm $tmpfile_zip
+          echo "Processing CERT-EU"
+          for URL in `cat $tmpfile_json | jq -r ."[][].url" | grep http`
+          do
+            show_actions "$URL"
+          done
+          rm $tmpfile_json
+  done
+  exit 0
+fi
+
+
 i=0
 for tn in $LAST 
 do
@@ -266,7 +309,12 @@ do
     echo "Processing ticket #$tn"
     if [ "$multi" == "False" ]
     then
-        URL=`$RT_BIN show $tn | egrep -o 'h[txX][txX]ps?://[^ :"]+' | head -n 1` 
+        LOOKYLOO=`$RT_BIN show $tn | egrep -o 'h[txX][txX]ps?://[^ :"]+'| grep 'lookyloo.circl.lu' | head -n 1`
+        if [ ! -z $LOOKYLOO ] 
+        then
+            echo "Lookyloo archive: $LOOKYLOO"
+        fi
+        URL=`$RT_BIN show $tn | egrep -o 'h[txX][txX]ps?://[^ :"]+'| grep -v 'lookyloo.circl.lu' | head -n 1` 
         # If JSON:
         # URL=`$RT_BIN show $tn |jq -r  '.[] | keys[] '` 
         if [ -z $URL ]
