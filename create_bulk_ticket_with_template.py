@@ -40,7 +40,7 @@ rt_pass = cfg.rt_pass
 sphinx_server = cfg.sphinx_server
 sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
-debug = False 
+debug = True 
 
 # RT
 set_logging('error')
@@ -176,4 +176,5 @@ if 'Format' in headerline:
             logger.error(e.response.status_int)
             logger.error(e.response.status)
             logger.error(e.repoinse.parsed)
-
+else:
+    print "Header doesn't contain 'Format:' string"
