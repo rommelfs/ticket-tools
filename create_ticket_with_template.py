@@ -2,7 +2,7 @@
 import sys
 from string import Template
 import ioc_fanger
-
+import time
 import os
 
 from pyurlabuse import PyURLAbuse
@@ -20,6 +20,8 @@ import sphinxapi
 import urllib3
 import json
 from pyfaup.faup import Faup
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -129,8 +131,11 @@ if onlinecheck == 1:
 
 my_pyurlabuse = PyURLAbuse()
 response = my_pyurlabuse.run_query(url, with_digest=True)
+time.sleep(5)
+response = my_pyurlabuse.run_query(url, with_digest=True)
 emails = ",".join([email.strip('.') for email in response['digest'][1]])
 asns = response['digest'][2]
+
 text = ioc_fanger.defang(response['digest'][0])
 d = {'details': text}
 
@@ -147,7 +152,12 @@ f.close()
 # print emails
 #emails = "sascha@rommelfangen.de"
 
-subject = "%s (%s)" % (subject, "|".join(asns))
+# this could happen if there is no IP address or if for some reason
+# urlabuse is not giving back an ASN name in due time.
+if not asns:
+    subject = "%s (%s)" % (subject, "undefined")
+else:
+    subject = "%s (%s)" % (subject, "|".join(asns))
 
 if debug:
     sys.exit(42)
@@ -173,6 +183,7 @@ if misp_id is not False:
     
     res_search = misp.search(controller='attributes',eventid=misp_id, value=url)
     uuid = None
+    # The following needs fixes for ExpandedPyMisp
     for attribs in res_search['response']['Attribute']:
         uuid = attribs['uuid']
     if uuid is not None:
@@ -181,9 +192,10 @@ if misp_id is not False:
         # if MISP allows to sight on add, we should implement it here, too
         misp.sighting(uuid=uuid, source="URLabuse")
         sys.exit(0)
-    event = misp.get(misp_id)
-    existing_event = MISPEvent()
-    existing_event.load(event)
+    # This is obsolete 
+    #event = misp.get(misp_id)
+    #existing_event = MISPEvent()
+    #existing_event.load(event)
     redirect_count = 0
     fex = Faup()
     fex.decode(url)
