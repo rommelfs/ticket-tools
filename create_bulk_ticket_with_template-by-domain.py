@@ -30,7 +30,7 @@ rt_pass = cfg.rt_pass
 sphinx_server = cfg.sphinx_server
 sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
-debug = True
+debug = False 
 
 # RT
 logger = logging.getLogger('rt')
@@ -78,6 +78,7 @@ if 'Format' in headerline:
         reader = csv.reader(f)
         my_list = list(reader)
     for item in my_list:
+        print(item)
         if (item and 'Format' not in item[0]) and item[1] not in excludelist:
             asns.add(item[0])
 
