@@ -3,7 +3,6 @@ import sys
 from string import Template
 import os
 
-import urllib
 
 from pyurlabuse import PyURLAbuse
 import rt
@@ -34,7 +33,7 @@ rt_pass = cfg.rt_pass
 sphinx_server = cfg.sphinx_server
 sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
-debug = True
+debug = False 
 
 # RT
 logger = logging.getLogger('rt')
@@ -70,20 +69,20 @@ def open_tickets_for_url(url):
 
 # inputfile = 'ava.txt'
 inputfile = csvfile
-f = open(inputfile, 'r')
+f = open(inputfile, 'rt')
 headerline = f.readline().strip()
 f.close()
-
+asnposition =  0
 
 if 'Format' in headerline:
     asns = set()
 
-    with open(inputfile, 'rb') as f:
+    with open(inputfile, 'rt') as f:
         reader = csv.reader(f)
         my_list = list(reader)
     for item in my_list:
         if (item and 'Format' not in item[0]) and item[1] not in excludelist:
-            asns.add(item[0])
+            asns.add(item[asnposition])
 
     for asn in asns:
         sendto = []
@@ -104,12 +103,12 @@ if 'Format' in headerline:
         detail_text = headerline
         for item in my_list:
             if item and 'Format' not in item[0]:
-                if item[0] == asn:
+                if item[asnposition] == asn:
                     detail_text += "\n " + ','.join(item)
                     #
                     print(','.join(item))
 
-        text = urllib.quote(detail_text)
+        text = detail_text
         d = {'details': text}
 
         try:
@@ -131,7 +130,7 @@ if 'Format' in headerline:
             sys.exit(42)
 
         try:
-            ticketid = tracker.create_ticket(Queue=5, Subject=urllib.quote(subject), Text=body, Requestors=emails)
+            ticketid = tracker.create_ticket(Queue=5, Subject=subject, Text=body, Requestors=emails)
             print("Ticket created: %s" % ticketid)
         except rt.RtError as e:
             logger.error(e)
