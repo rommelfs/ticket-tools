@@ -128,8 +128,8 @@ if onlinecheck == 1:
     if not online:
         print("Resource %s is offline (size: %s)" % (url, size))
         sys.exit(1)
-
 my_pyurlabuse = PyURLAbuse()
+print("Querying URLAbuse:")
 response = my_pyurlabuse.run_query(url, with_digest=True)
 time.sleep(5)
 response = my_pyurlabuse.run_query(url, with_digest=True)
