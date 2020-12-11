@@ -1,0 +1,40 @@
+Abuse report: Emotet related compromised servers in your network 
+Dear Abuse teams,
+ 
+ CIRCL is the CERT/CSIRT (Computer Emergency Response Team/Computer Security Incident Response Team) for the private sector, communes and non-governmental entities in Luxembourg.
+ 
+ We found out that at the time of writing the following list of machines appears to be compromised by Emotet malware. The Emotet malware steals login credentials for email accounts configured on infected systems. The compromised credentials are subsequently provided to spam bots in order to send out larger amounts of spam mails to further spread the Emotet malware.
+
+  $details
+
+ The CSV contains the following metadata:
+
+ [T0_IP] The external IP address (likely victim) that was observed (tier 0)
+ [T1_IP] The IP address that T0 connected to (tier 1). Often other bots or compromised servers
+ [TIMESTAMP_UTC] The timestamp at which the connection was first seen.
+
+ The data is enriched with Maxmind GeopIP data:
+
+ [asn] The ASN where the IP is located in
+ [domain] The domain listed for the IP block
+ [isp] The ISP responsible for the AS-IP resides in
+ [cc] The country code for the IP, according to the GeoIP2 data.
+
+ Please note that we did our best to list the data to the relevant country codes, however you might receive data that is not located in your country.
+ Please report these errors to us, so we can inform the relevant country.
+
+ The provided log contains unique contact moments from the analysis so far, where a victim was connected to the T1 server, including the timestamp. A single victim could have contacted multiple T1 servers, which results in multiple entries in the list.
+
+ The data provided should allow you to locate each victim and take proper measures. We believe many victims may (still) not be aware of the infection(s) and this information can contribute to (ongoing) investigations by the victims.
+
+ We would like to ask you to notify the owners of the affected machines and/or the responsible network providers of the compromised machines and related Emotet infections.
+
+ Don't hesitate to get back to us if you have further questions or need additional support.
+ 
+ We would appreciate if you confirm the reception of this report.
+ 
+ With kind regards,
+ --
+ CIRCL - Computer Incident Response Center Luxembourg
+ 16, boulevard d'Avranches - L-1160 Luxembourg
+ http://www.circl.lu/

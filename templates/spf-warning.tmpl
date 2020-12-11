@@ -1,0 +1,35 @@
+Abuse report: Misconfigured SPF records in your network/constituency
+Dear Abuse teams,
+
+ CIRCL is the CERT/CSIRT (Computer Emergency Response Team/Computer Security Incident Response Team) for the private sector, communes and non-governmental entities in Luxembourg.
+
+ We are writing you to inform you of a misconfiguration in the Sender Policy Framework (SPF) of the domain names under your jurisdiction. This means that attackers are able to send spoofed emails on behalf of these domains.
+ 
+ This means that attackers are able to send spoofed emails on behalf of these domains:
+  $details
+
+ Description:
+ 1 - domain_name: This is the doamin name.
+ 2 - spf_result: This is the result of the check_host() function specified in rfc 7208. It is either "pass" or "permerror".
+ 3 - description: description of the check_host() function related to spf_result column.
+ 4 - notif_type: this is the reason we are notifying you. Some domains are ccTLDs so we notify them to CERTs/CSIRTs.
+
+ The priority is always with domains with spf "pass" results (column 2 of attached .CSV file) since these domains can be misused by spammers to easily deliver spam emails into users inbox.
+
+ Please check and correct the SPF entries of raise the issue with your customer/constituent.
+
+ This vulnerability/misconfiguration has been rated as 5.4 out of 10.0, according to the scale published on the Common Vulnerability Scoring System (CVSS).
+ More information about the score of the vulnerability/misconfiguration can be found here:
+ https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N 
+
+ Don't hesitate to get back to us if you have further questions or need additional support.
+
+ We would appreciate if you confirm the reception of this report.
+
+ [1] https://www.us-cert.gov/ncas/alerts/TA16-336A
+
+ With kind regards,
+ --
+ CIRCL - Computer Incident Response Center Luxembourg
+ 16, boulevard d'Avranches - L-1160 Luxembourg
+ http://www.circl.lu/
