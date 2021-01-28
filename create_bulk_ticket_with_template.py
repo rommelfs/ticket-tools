@@ -72,7 +72,11 @@ inputfile = csvfile
 f = open(inputfile, 'rt')
 headerline = f.readline().strip()
 f.close()
-asnposition =  0
+# Index starting at 0 
+# Common positions: 
+# Emotet = 0
+
+asnposition = 0 
 
 if 'Format' in headerline:
     asns = set()
