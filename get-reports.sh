@@ -78,18 +78,21 @@ show_actions () {
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents" 
         $RT_BIN edit $tn set CF-Classification="Phishing"
+        $RT_BIN edit $tn set CF-RSIT_1002="Fraud"
         ;;
     2)  echo "Malware server take-down request"
         $CREATETICKET_BIN $tn $TEMPLATE_MALWARE "$URL" 0 5
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="Malware"
+        $RT_BIN edit $tn set CF-RSIT_1002="Malicious Code"
         ;;
     3)  echo "Defaced server take-down request"
         $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT "$URL" 0 5
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
+        $RT_BIN edit $tn set CF-RSIT_1002="Information Content Security"
         take_screenshot $URL
         ;;
     4)  echo "Compromised server take-down request"
@@ -97,6 +100,7 @@ show_actions () {
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
+        $RT_BIN edit $tn set CF-RSIT_1002="Intrusions"
         take_screenshot $URL
         ;;
     5)  echo "Cybersquatting take-down request"
@@ -104,6 +108,7 @@ show_actions () {
         #/opt/rt4/bin/rt resolve $tn
         $RT_BIN edit $tn set queue="Incidents"
         $RT_BIN edit $tn set CF-Classification="Scam"
+        $RT_BIN edit $tn set CF-RSIT_1002="Fraud"
         take_screenshot $URL
         ;;
     8)  ;;
