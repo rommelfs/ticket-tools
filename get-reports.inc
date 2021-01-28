@@ -26,18 +26,20 @@ Open MS-SQL Server, $TEMPLATE_DIR/ss_open-mssql-server.tmpl, 582962
 Open Portmapper Scan, $TEMPLATE_DIR/ss_open-portmapper.tmpl, 582967
 Accessible/Open MongoDB Service, $TEMPLATE_DIR/ss_open-mongodb-service.tmpl, 582963
 Open Elasticsearch Server, $TEMPLATE_DIR/ss_open-elasticsearch-server.tmpl, 582966
-Open LDAP Services, $TEMPLATE_DIR/ss_open-ldap-server.tmpl, 582970"
+Open LDAP Services, $TEMPLATE_DIR/ss_open-ldap-server.tmpl, 582970
+Command and Control, $TEMPLATE_DIR/ss_command_and_control.tmpl, 1403648
+Open IPP Report, $TEMPLATE_DIR/ss_open-ipp-server.tmpl, 1433262"
 
+#SNMP Report, $TEMPLATE_DIR/ss_open-snmp-server.tmpl, 1399562
+ 
 #SMB Service, $TEMPLATE_DIR/defaced_website.tmpl, 582974
 #VNC Service, $TEMPLATE_DIR/defaced_website.tmpl, 582975
 #Drone Report, $TEMPLATE_DIR/defaced_website.tmpl, 582940
 #Drone Brute Force, $TEMPLATE_DIR/defaced_website.tmpl, 582941
 #Sandbox URL, $TEMPLATE_DIR/defaced_website.tmpl, 582942
-#Command and Control, $TEMPLATE_DIR/defaced_website.tmpl, 582943
 #Sinkhole HTTP Drone, $TEMPLATE_DIR/defaced_website.tmpl, 582944
 #Microsoft Sinkhole, $TEMPLATE_DIR/defaced_website.tmpl, 582945
 #NTP Version, $TEMPLATE_DIR/defaced_website.tmpl, 582947
-#SNMP Report, $TEMPLATE_DIR/defaced_website.tmpl, 582948
 #Netbios Report, $TEMPLATE_DIR/defaced_website.tmpl, 582949
 #SSDP Report, $TEMPLATE_DIR/defaced_website.tmpl, 582950
 #Chargen Report, $TEMPLATE_DIR/defaced_website.tmpl, 582951
@@ -73,7 +75,7 @@ case "$1" in
     ;;
 "incibe")   LAST=`$RT_BIN list "Queue='General' and (Status='new' or Status='open') and Subject like 'Phishing' and Requestor.EmailAddress='incidencias@incibe-cert.es'" -f ticket |grep -v "id" |tail -n 5000`
     ;;
-"shadowserver")     LAST=`$RT_BIN list "Queue='Z_Autoreport' and (Status='new' or Status='open') and Subject like 'Shadowserver Luxembourg (ASN)' and Requestor.EmailAddress like 'autoreports@shadowserver.org'" -f ticket |grep -v "id" |tail -n 5000`
+"shadowserver")     LAST=`$RT_BIN list "Queue='ZZ_Autoreport' and (Status='new' or Status='open') and Subject like 'Shadowserver Luxembourg' and Requestor.EmailAddress like 'autoreports@shadowserver.org'" -f ticket |grep -v "id" |tail -n 5000`
     ;;
 "cert-bund")    LAST=`$RT_BIN list "Queue='General' and (Status='new' or Status='open') and Subject like 'CB-Report' and Requestor.EmailAddress='reports@reports.cert-bund.de'" -f ticket |grep -v "id" |tail -n 5000`
     ;;
