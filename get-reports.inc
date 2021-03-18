@@ -28,9 +28,11 @@ Accessible/Open MongoDB Service, $TEMPLATE_DIR/ss_open-mongodb-service.tmpl, 582
 Open Elasticsearch Server, $TEMPLATE_DIR/ss_open-elasticsearch-server.tmpl, 582966
 Open LDAP Services, $TEMPLATE_DIR/ss_open-ldap-server.tmpl, 582970
 Command and Control, $TEMPLATE_DIR/ss_command_and_control.tmpl, 1403648
-Open IPP Report, $TEMPLATE_DIR/ss_open-ipp-server.tmpl, 1433262"
+NTP Version, $TEMPLATE_DIR/ss_ntp_scan.tmpl, 582947
+SNMP Report, $TEMPLATE_DIR/ss_open-snmp-server.tmpl, 1399562
+Open IPP Report, $TEMPLATE_DIR/ss_open-ipp-server.tmpl, 1433262
+Vulnerable Exchange Servers Special Report, $TEMPLATE_DIR/vulnerable-exchange-notification.tmpl, 1518507"
 
-#SNMP Report, $TEMPLATE_DIR/ss_open-snmp-server.tmpl, 1399562
  
 #SMB Service, $TEMPLATE_DIR/defaced_website.tmpl, 582974
 #VNC Service, $TEMPLATE_DIR/defaced_website.tmpl, 582975
@@ -39,7 +41,6 @@ Open IPP Report, $TEMPLATE_DIR/ss_open-ipp-server.tmpl, 1433262"
 #Sandbox URL, $TEMPLATE_DIR/defaced_website.tmpl, 582942
 #Sinkhole HTTP Drone, $TEMPLATE_DIR/defaced_website.tmpl, 582944
 #Microsoft Sinkhole, $TEMPLATE_DIR/defaced_website.tmpl, 582945
-#NTP Version, $TEMPLATE_DIR/defaced_website.tmpl, 582947
 #Netbios Report, $TEMPLATE_DIR/defaced_website.tmpl, 582949
 #SSDP Report, $TEMPLATE_DIR/defaced_website.tmpl, 582950
 #Chargen Report, $TEMPLATE_DIR/defaced_website.tmpl, 582951
@@ -54,7 +55,7 @@ Open IPP Report, $TEMPLATE_DIR/ss_open-ipp-server.tmpl, 1433262"
 #Blacklisted IP Addresses, $TEMPLATE_DIR/defaced_website.tmpl, 582976
 
 MISP_PHISHING_ID="79955"
-MISP_PHISHING_ID_PHISHTANK="79953"
+MISP_PHISHING_ID_PHISHTANK="82452"
 
 REPLACED_DOMAIN="taggingserver\.com"
 
