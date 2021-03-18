@@ -90,6 +90,7 @@ if 'Format' in headerline:
 
     for asn in asns:
         sendto = []
+        asn_string = asn.strip()
         asn_string = "AS" + asn.strip()
         print(asn_string)
         data = pythonwhois.net.get_whois_raw(asn_string)
@@ -136,6 +137,7 @@ if 'Format' in headerline:
         try:
             ticketid = tracker.create_ticket(Queue=5, Subject=subject, Text=body, Requestors=emails)
             print("Ticket created: %s" % ticketid)
+            success = tracker.reply(ticketid, text=body)
         except rt.RtError as e:
             logger.error(e)
 
