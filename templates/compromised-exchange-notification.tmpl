@@ -1,0 +1,53 @@
+Abuse report: Compromised Exchange servers in your network 
+Dear Abuse teams,
+ 
+ CIRCL is the CERT/CSIRT (Computer Emergency Response Team/Computer Security Incident Response Team) for the private sector, communes and non-governmental entities in Luxembourg.
+ 
+ You or your organisation is operating one or more Microsoft Exchange Server which as likely be compromised and need your attention immediately
+
+  $details
+
+ where the fields are: IP,ASN,ASN Date,ISP,Country,AS Name Source
+
+ The servers have been evaluated by a trusted source for indicators of compromise. While the risk of false positives exists, it is very likely that a web shell has been detected on this/those servers.
+
+ Background information:
+
+ On 2nd March 2021, Microsoft released updates for the following Exchange Server [1,2,3] vulnerabilities:
+
+ - CVE-2021-26855 (ref. http://cvepremium.circl.lu/cve/CVE-2021-26855)
+ - CVE-2021-26857 (ref. http://cvepremium.circl.lu/cve/CVE-2021-26857)
+ - CVE-2021-26858 (ref. http://cvepremium.circl.lu/cve/CVE-2021-26858)
+ - CVE-2021-27065 (ref. http://cvepremium.circl.lu/cve/CVE-2021-27065)
+
+ The vulnerabilities affect Microsoft Exchange Server on-premises versions. Exchange Online is not affected. 
+
+ - Microsoft Exchange Server 2013 
+ - Microsoft Exchange Server 2016 
+ - Microsoft Exchange Server 2019 
+
+ It is recommended to prioritize installing updates on Exchange Servers which are externally facing. All affected Exchange Servers should ultimately be updated. Some of the vulnerabilities were already exploited in the wild, we strongly recommend to review the security and especially the logs of your Microsoft Exchange Server for any indicators of exploitation.
+
+ Patching only is not sufficient. There were already Microsoft Exchange servers compromised by the 0-day and installed with persistent backdoor in the system. Meaning you can have a patched system with one or more threat-actor having still access. We strongly recommend to review the logs and apply standard incident response procedures. 
+
+ We recommended to scan the potentially compromised Exchange Server with a script like:
+
+ - https://github.com/microsoft/CSS-Exchange/tree/main/Security
+ - https://github.com/cert-lv/exchange_webshell_detection
+
+ Please acknowledge the reception of this security notification.
+
+ We hope this helps.
+
+ Best regards
+
+ --
+ CIRCL - Computer Incident Response Center Luxembourg
+ 16, boulevard d'Avranches - L-1160 Luxembourg
+ http://www.circl.lu/
+
+ [1] https://msrc-blog.microsoft.com/2021/03/02/multiple-security-updates-released-for-exchange-server/
+ [2] https://www.microsoft.com/security/blog/2021/03/02/hafnium-targeting-exchange-servers/
+ [3] https://techcommunity.microsoft.com/t5/exchange-team-blog/released-march-2021-exchange-server-security-updates/ba-p/2175901
+
+ 

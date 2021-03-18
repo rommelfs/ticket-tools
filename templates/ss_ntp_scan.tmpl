@@ -1,0 +1,29 @@
+Abuse report: Open NTP Systems in your network 
+Dear Abuse teams,
+ 
+ CIRCL is the CERT/CSIRT (Computer Emergency Response Team/Computer Security Incident Response Team) for the private sector, communes and non-governmental entities in Luxembourg.
+ 
+ We have been informed by a trusted source that at the time of writing the following list of client(s) appears to have the potential to be used in NTP amplification attacks [1][2].
+
+  $details
+
+ What are possible solutions?
+ 
+ (1) Disable the service if not needed
+
+ (2) Implement access lists to restrict access to this service
+
+ This report identifies NTP servers that have the potential to be used in amplification attacks by criminals that wish to perform denial of service attacks. The NTP version command is a Mode 6 query for READVAR. While not as bad as the Mode 7 query for MONLIST, the queries for READVAR will normally provide around 30x amplification.
+ 
+ Don't hesitate to get back to us if you have further questions or need additional support or want to inform us about false positives.
+ 
+ We would appreciate if you confirm the reception of this report.
+ 
+ [1] https://scan.shadowserver.org/ntpversion/
+ [2] https://www.us-cert.gov/ncas/alerts/TA14-017A
+
+ With kind regards,
+ --
+ CIRCL - Computer Incident Response Center Luxembourg
+ 16, boulevard d'Avranches - L-1160 Luxembourg
+ http://www.circl.lu/
