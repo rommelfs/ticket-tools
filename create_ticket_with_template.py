@@ -165,6 +165,7 @@ if debug:
 #try:
 ticketid = tracker.create_ticket(Queue=queue, Subject=subject, Text=body, Requestors=emails)
 print("Ticket created: {}".format(ticketid))
+success = tracker.reply(ticketid, text=body)
 #except rt.RtError as e:
 #    logger.error(e)
 
