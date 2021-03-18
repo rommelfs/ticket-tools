@@ -131,6 +131,7 @@ if 'Format' in headerline:
         try:
             ticketid = tracker.create_ticket(Queue=5, Subject=subject, Text=body, Requestors=requestor)
             print("Ticket created: %s" % ticketid)
+            success = tracker.reply(ticketid, text=body)
         except rt.RtError as e:
             logger.error(e)
 
