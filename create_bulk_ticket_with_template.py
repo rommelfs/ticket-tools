@@ -8,7 +8,7 @@ from pyurlabuse import PyURLAbuse
 import rt
 
 import logging
-import sphinxapi
+#import sphinxapi
 import csv
 import pythonwhois
 
@@ -30,8 +30,8 @@ import config as cfg
 rt_url = cfg.rt_url
 rt_user = cfg.rt_user
 rt_pass = cfg.rt_pass
-sphinx_server = cfg.sphinx_server
-sphinx_port = cfg.sphinx_port
+#sphinx_server = cfg.sphinx_server
+#sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
 debug = False 
 
@@ -41,9 +41,9 @@ tracker = rt.Rt(rt_url, rt_user, rt_pass, verify_cert=False)
 tracker.login()
 
 # Sphinx
-client = sphinxapi.SphinxClient()
-client.SetServer(sphinx_server, sphinx_port)
-client.SetMatchMode(2)
+#client = sphinxapi.SphinxClient()
+#client.SetServer(sphinx_server, sphinx_port)
+#client.SetMatchMode(2)
 
 
 def is_ticket_open(id):
@@ -128,14 +128,17 @@ if 'Format' in headerline:
 
         emails = ', '.join(sendto)
 
-        # emails = "sascha@rommelfangen.de"
+        #emails = "sascha@rommelfangen.de"
         subject = "%s (%s)" % (subject, asn)
 
         if debug:
             sys.exit(42)
 
+        print(subject)
+        print(body)
+        print(emails)
         try:
-            ticketid = tracker.create_ticket(Queue=5, Subject=subject, Text=body, Requestors=emails)
+            ticketid = tracker.create_ticket(Queue="Investigations", Subject=subject, Text=body, Requestors=emails)
             print("Ticket created: %s" % ticketid)
             success = tracker.reply(ticketid, text=body)
         except rt.RtError as e:

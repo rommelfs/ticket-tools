@@ -18,7 +18,7 @@ do
   ATTACHMENT=""
   ATTACHMENTID=""
   date
-  TICKET=`/opt/rt4/bin/rt ls -i -t ticket -q General "Subject like 'ProxyList for Today' and Status=new and requestor='noreply@pl.hidemyass.com'"|tail -n 1`
+  TICKET=`/opt/rt5/bin/rt ls -i -t ticket -q General "Subject like 'ProxyList for Today' and Status=new and requestor='noreply@pl.hidemyass.com'"|tail -n 1`
   ERROR=$?
   if [[ $ERROR -eq 0 ]] && [ -n "$TICKET" ]
   then

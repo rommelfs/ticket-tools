@@ -1,8 +1,7 @@
 #!/bin/bash 
-. ./inc_rt.conf
+. ~/.inc_rt.conf
 . ./inc_xmpp.conf
 . ./inc_external.conf
-
 URLLIST=""
 multi="False"
 
@@ -28,11 +27,11 @@ take_screenshot () {
     fi
     SCREENSHOT=`/usr/local/bin/faup -f host "$URL"`
     echo "$SCREENSHOT"
-    export URL; ssh ${SCREENSHOT_QUERY_USER}@${SCREENSHOT_SERVER} "$URL"
+    export URL; ssh ${SCREENSHOT_IDENTITY} ${SCREENSHOT_QUERY_USER}@${SCREENSHOT_SERVER} "$URL"
     if [ $FETCH -eq 1 ]
     then
         sleep 2
-        export URL; scp ${SCREENSHOT_FETCH_USER}@${SCREENSHOT_SERVER}:~/screenshots/${SCREENSHOT}.png screenshots/
+        export URL; scp ${SCREENSHOT_IDENTITY} ${SCREENSHOT_FETCH_USER}@${SCREENSHOT_SERVER}:~/screenshots/${SCREENSHOT}.png screenshots/
         sleep 1
         if [ $COMMENT -eq 1 ] 
         then
@@ -66,56 +65,68 @@ show_actions () {
     echo "Take-down consideration for $URL"
     #echo "Emails:"
     #echo "$UA_RESULT" | grep "All emails" | cut -d ":" -f2
-    read -rsn1 -p"press (1) phishing, (2) malware, (3) defacement, (4) webshell, (5) cybersquatting - (8) ignore, (9) ignore and close, (e) edit URL, (0) exit" option;echo
+    #if [[ $URL =~ "cloudserver21.eu" ]]
+    if [[ `echo $URL | fgrep -f /home/rommelfs/ticket-tools/warning.inc` ]]
+    then
+      echo "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+      echo " ATTENTION: $URL is on a warning list. Do not process!"
+      echo "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+    fi
+    read -rsn1 -p"press (1) phishing, (2) malware, (3) defacement, (4) webshell, (5) cybersquatting - (8) ignore, (9) ignore and close, (i) ignore and whitelist, (e) edit URL, (0) exit" option;echo
     case $option in
     "e") read -e -p "Edit URL: " -i "$URL" URL
         show_actions "$URL"
         ;;
     1)  echo "Phishing server take-down request"
-        take_screenshot "$URL"
+        #take_screenshot "$URL"
         echo "$URL"
-        $CREATETICKET_BIN $tn $TEMPLATE_PHISHING "$URL" 0 5 $MISP_PHISHING_ID
+        $CREATETICKET_BIN $tn $TEMPLATE_PHISHING "$URL" 0 36 $MISP_PHISHING_ID
         #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents" 
+        $RT_BIN edit $tn set queue="Automated security reports" 
         $RT_BIN edit $tn set CF-Classification="Phishing"
         $RT_BIN edit $tn set CF-RSIT_1002="Fraud"
         ;;
     2)  echo "Malware server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_MALWARE "$URL" 0 5
+        $CREATETICKET_BIN $tn $TEMPLATE_MALWARE "$URL" 0 36
         #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents"
+        $RT_BIN edit $tn set queue="Automated security reports"
         $RT_BIN edit $tn set CF-Classification="Malware"
         $RT_BIN edit $tn set CF-RSIT_1002="Malicious Code"
         ;;
     3)  echo "Defaced server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT "$URL" 0 5
+        $CREATETICKET_BIN $tn $TEMPLATE_DEFACEMENT "$URL" 0 36
         #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents"
+        $RT_BIN edit $tn set queue="Automated security reports"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
         $RT_BIN edit $tn set CF-RSIT_1002="Information Content Security"
-        take_screenshot $URL
+        #take_screenshot $URL
         ;;
     4)  echo "Compromised server take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_COMPROMISED_WEBSHELL "$URL" 0 5
+        $CREATETICKET_BIN $tn $TEMPLATE_COMPROMISED_WEBSHELL "$URL" 0 36
         #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents"
+        $RT_BIN edit $tn set queue="Automated security reports"
         $RT_BIN edit $tn set CF-Classification="System Compromise"
         $RT_BIN edit $tn set CF-RSIT_1002="Intrusions"
-        take_screenshot $URL
+        #take_screenshot $URL
         ;;
     5)  echo "Cybersquatting take-down request"
-        $CREATETICKET_BIN $tn $TEMPLATE_CYBERSQUATTING "$URL" 0 5
+        $CREATETICKET_BIN $tn $TEMPLATE_CYBERSQUATTING "$URL" 0 36
         #/opt/rt4/bin/rt resolve $tn
-        $RT_BIN edit $tn set queue="Incidents"
+        $RT_BIN edit $tn set queue="Automated security reports"
         $RT_BIN edit $tn set CF-Classification="Scam"
         $RT_BIN edit $tn set CF-RSIT_1002="Fraud"
-        take_screenshot $URL
+        #take_screenshot $URL
         ;;
     8)  ;;
     9)  $RT_BIN comment $tn -m "URL unreachable at time of testing or not considered malicious"
         $RT_BIN resolve $tn
         ;;
     0)  exit
+        ;;
+    "i") DOMAIN=`faup -f domain "$URL"`
+        echo $DOMAIN >> spambee-ignorelist.inc
+	$RT_BIN comment $tn -m "URL not considered to be malicious and whitelisted"
+        $RT_BIN resolve $tn
         ;;
     *)  echo "unrecognized option"
         ;;
@@ -185,7 +196,7 @@ then
       echo "epoch: $EPOCH"
       echo "url: $URL"
       #take_screenshot "$URL" 0 0
-      $CREATETICKET_BIN $PHISHTANK_TICKET $TEMPLATE_PHISHING "$URL" 2 5 $MISP_PHISHING_ID_PHISHTANK
+      $CREATETICKET_BIN $PHISHTANK_TICKET $TEMPLATE_PHISHING "$URL" 2 36 $MISP_PHISHING_ID_PHISHTANK
       N_REPORTS=$((N_REPORTS+1))
     fi
     if [ $EPOCH -gt $MAXTIMESTAMP ]
@@ -231,12 +242,39 @@ then
           echo "Topic: $CB_TOPIC"
           echo "Template: $CB_PATH"
           echo "Master Ticket: $CB_TICKET"
-          $CREATE_BULK_BIN $CB_TICKET $CB_PATH $tmpfile_csv
+          $CREATE_BULK_BIN $CB_TICKET $CB_PATH $tmpfile_csv "1" $tn
           $RT_BIN resolve $tn
           rm $tmpfile_csv
       fi
     done
     IFS="$OLD_IFS"
+  done
+  exit 0
+fi
+
+if [[ "$1" =~ "shadowserver-variot" ]]
+then
+  for tn in $LAST
+  do
+    SUBJECT=`$RT_BIN show $tn -f subject`
+    echo $SUBJECT
+    ATTACHMENT=`$RT_BIN show $tn/attachments | grep .csv|cut -d ":" -f 1`
+    echo $ATTACHMENT
+    DIR=$(echo $SUBJECT | grep Subject| cut -d "]" -f 2|cut -d ":" -f 2 | cut -d " " -f 2)
+    SUBJECT=$(echo $SUBJECT | grep Subject| cut -d "]" -f 2| sed -e 's/://g'|cut -d " " -f 2-)
+    mkdir -p "./variot/$DIR"
+    tmpfile="./variot/$DIR/$SUBJECT.csv"
+    if [[ ! -z $ATTACHMENT ]]
+    then
+      $RT_BIN show $tn/attachments/$ATTACHMENT/content > "$tmpfile"
+      echo "$tmpfile"
+    else
+      URL_FROM_BODY=$($RT_BIN show $tn|grep https|head -1|xargs)
+      echo "url: $URL_FROM_BODY"
+      /usr/bin/wget -4 "$URL_FROM_BODY" -O "$tmpfile"
+      echo "$tmpfile"
+    fi
+    $RT_BIN resolve $tn
   done
   exit 0
 fi
@@ -270,7 +308,7 @@ then
           echo "Topic: $SS_TOPIC"
           echo "Template: $SS_PATH"
           echo "Master Ticket: $SS_TICKET"
-          $CREATE_BULK_BIN $SS_TICKET $SS_PATH $tmpfile_csv "1"
+          $CREATE_BULK_BIN $SS_TICKET $SS_PATH $tmpfile_csv "1" $tn
           $RT_BIN resolve $tn
           rm $tmpfile_csv
       fi
@@ -304,6 +342,12 @@ then
   exit 0
 fi
 
+#echo "$1"
+#if [[ "$1" =~ '^http.*' ]]
+#then
+#	echo "implementing it."
+#	exit
+#fi
 
 i=0
 for tn in $LAST 
@@ -328,6 +372,17 @@ do
             URL="invalid.tld"
             #exit 1
         fi 
+	DOMAIN=`faup -f domain "$URL"`
+	echo $DOMAIN
+	if [[ -z "$DOMAIN" ]] 
+	then
+	    DOMAIN="invalid domain"
+    	else
+	    if [[ `grep $DOMAIN spambee-ignorelist.inc` ]]
+            then
+	        $RT_BIN resolve $tn
+            fi
+	fi
         show_actions $URL 
     else
         URLS=`$RT_BIN show $tn |egrep -o "h[txX][txX]ps?://[^ ]+"`

@@ -16,7 +16,7 @@ import rt
 import requests
 
 import logging
-import sphinxapi
+#import sphinxapi
 import urllib3
 import json
 from pyfaup.faup import Faup
@@ -31,6 +31,8 @@ if len(sys.argv) < 4:
 
 incident = sys.argv[1]
 template = sys.argv[2]
+templatename = template
+
 url = sys.argv[3]
 try:
     onlinecheck = sys.argv[4]
@@ -39,7 +41,7 @@ except Exception:
 try:
     queue = sys.argv[5]
 except Exception:
-    queue = 5
+    queue = 36
 try:
     misp_id = sys.argv[6]
 except Exception:
@@ -55,8 +57,8 @@ ua = cfg.ua
 rt_url = cfg.rt_url
 rt_user = cfg.rt_user
 rt_pass = cfg.rt_pass
-sphinx_server = cfg.sphinx_server
-sphinx_port = cfg.sphinx_port
+#sphinx_server = cfg.sphinx_server
+#sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
 debug = False
 
@@ -84,9 +86,9 @@ tracker = rt.Rt(rt_url, rt_user, rt_pass, verify_cert=False)
 tracker.login()
 
 # Sphinx
-client = sphinxapi.SphinxClient()
-client.SetServer(sphinx_server, sphinx_port)
-client.SetMatchMode(2)
+#client = sphinxapi.SphinxClient()
+#client.SetServer(sphinx_server, sphinx_port)
+#client.SetMatchMode(2)
 
 
 def is_ticket_open(id):
@@ -102,14 +104,14 @@ def is_ticket_open(id):
 
 
 def open_tickets_for_url(url):
-    q = "\"%s\"" % url
-    res = 0
-    # tickets = []
-    result = client.Query(q)
-    for match in result['matches']:
-        res = is_ticket_open(match['id'])
-    return res
-
+    #q = "\"%s\"" % url
+    #res = 0
+    ## tickets = []
+    #result = client.Query(q)
+    #for match in result['matches']:
+    #    res = is_ticket_open(match['id'])
+    #return res
+    return False
 
 print("Checking URL: %s" % url)
 
@@ -177,6 +179,13 @@ try:
 except rt.RtError as e:
     logger.error(e)
 
+try:
+    if templatename == "phishing_server.tmpl":
+        rt_response = tracker.edit_ticket(ticketid, CF_Classification='Phishing')
+        rt_response = tracker.edit_ticket(ticketid, CF_RSIT_1002='Fraud')
+except rt.RtError as e:
+    logger.error(e)
+
 tracker.logout()
 
 if misp_id is not False:
@@ -184,26 +193,24 @@ if misp_id is not False:
 
     res_search = misp.search(controller='attributes',eventid=misp_id, value=url)
     uuid = None
-    # The following needs fixes for ExpandedPyMisp
-    for attribs in res_search['response']['Attribute']:
-        uuid = attribs['uuid']
+    try:
+        for attribs in res_search['response']['Attribute']:
+            uuid = attribs['uuid']
+    except:
+        pass
     if uuid is not None:
         print("URL is already present.")
         # add sighting
         # if MISP allows to sight on add, we should implement it here, too
         misp.sighting(uuid=uuid, source="URLabuse")
         sys.exit(0)
-    # This is obsolete
-    #event = misp.get(misp_id)
-    #existing_event = MISPEvent()
-    #existing_event.load(event)
     redirect_count = 0
     fex = Faup()
     fex.decode(url)
     hostname = fex.get_host().lower()
-    screenshot = hostname.decode() + '.png'
+    screenshot = hostname + '.png'
     mispObject = MISPObject('phishing')
-    mispObject.add_attribute('hostname', value=hostname.decode())
+    mispObject.add_attribute('hostname', value=hostname)
     for key in response['result']:
         u = list(key.keys())[0]
         if redirect_count == 0:
@@ -217,7 +224,7 @@ if misp_id is not False:
         nexthost = fex.get_host().lower()
         if nexthost != hostname:
             hostname = nexthost
-            mispObject.add_attribute('hostname', to_ids=False, value=hostname.decode())
+            mispObject.add_attribute('hostname', to_ids=False, value=hostname)
     for email in response['digest'][1]:
         mispObject.add_attribute('takedown-request-to', value=email)
     screenshot_path = 'screenshots/' + screenshot
@@ -228,13 +235,9 @@ if misp_id is not False:
             pass
     mispObject.add_attribute('verification-time', value=datetime.datetime.now().isoformat())
     mispObject.add_attribute('takedown-request', value=datetime.datetime.now().isoformat())
-    mispObject.add_attribute('internal reference', value=ticketid, distribution=0)
+    mispObject.add_attribute('internal-reference', value=ticketid, distribution=0)
     mispObject.add_attribute('online', value="Yes")
     mispObject.add_attribute('verified', value="Yes")
-    misp.add_object(misp_id, mispObject.template_uuid, mispObject)
-    # This is not working in this condition. The event is too large for updating it.
-    # The server gets stuck preparing something, there's a 240s timeout and the server returns a 500.
-    # The above method is better.
-    # existing_event.add_object(mispObject)
-    # misp.update(existing_event)
-    #misp.fast_publish(misp_id)
+    #print(mispObject.to_json(indent=2))
+    misp.add_object(misp_id, mispObject)
+    print("Information added to MISP.")

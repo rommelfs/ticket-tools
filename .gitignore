@@ -13,3 +13,16 @@ open_tickets_list.txt
 get-reports.replacements
 get-reports.replacements-email
 test*
+leakix_processed_*.txt
+*.csv
+__pycache__/
+variot
+urlhaus
+old
+csv-input/
+screenshots
+statistics
+online-valid.json*
+phishtank.*
+warning.inc
+spambee-ignorelist.inc
