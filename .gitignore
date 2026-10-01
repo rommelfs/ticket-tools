@@ -26,3 +26,6 @@ online-valid.json*
 phishtank.*
 warning.inc
 spambee-ignorelist.inc
+!tests/
+tests/*
+!tests/test_url_normalization.py

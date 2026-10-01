@@ -5,6 +5,8 @@ import ioc_fanger
 import time
 import os
 
+from url_normalization import normalize_url_hostname
+
 from pyurlabuse import PyURLAbuse
 from pymisp import PyMISP, MISPEvent, MISPObject
 from keys import misp_url, misp_key, misp_verifycert
@@ -16,24 +18,34 @@ import rt
 import requests
 
 import logging
-#import sphinxapi
+
+# import sphinxapi
 import urllib3
 import json
 from pyfaup.faup import Faup
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 if len(sys.argv) < 4:
-    print("Usage: %s Incident-ID Templatename URL [Onlinecheck:True|False] [Queue]" % sys.argv[0])
+    print(
+        "Usage: %s Incident-ID Templatename URL [Onlinecheck:True|False] [Queue]"
+        % sys.argv[0]
+    )
     sys.exit(1)
 
 incident = sys.argv[1]
 template = sys.argv[2]
 templatename = template
 
-url = sys.argv[3]
+original_url = sys.argv[3]
+try:
+    url = normalize_url_hostname(original_url)
+except ValueError:
+    print("Invalid URL or IDNA hostname; no ticket created.", file=sys.stderr)
+    sys.exit(1)
 try:
     onlinecheck = sys.argv[4]
 except Exception:
@@ -53,22 +65,25 @@ template = os.path.join(mypath, template)
 # Config
 min_size = 5000
 import config as cfg
+
 ua = cfg.ua
 rt_url = cfg.rt_url
 rt_user = cfg.rt_user
 rt_pass = cfg.rt_pass
-#sphinx_server = cfg.sphinx_server
-#sphinx_port = cfg.sphinx_port
+# sphinx_server = cfg.sphinx_server
+# sphinx_port = cfg.sphinx_port
 excludelist = cfg.known_good_excludelist
 debug = False
 
+
 def init(url, key):
-    return PyMISP(url, key, misp_verifycert, 'json')
+    return PyMISP(url, key, misp_verifycert, "json")
+
 
 def is_online(resource):
     try:
         session = requests.Session()
-        session.headers.update({'User-agent': ua})
+        session.headers.update({"User-agent": ua})
         response = session.get(resource)
         size = len(response.content)
         if int(size) > min_size:
@@ -81,21 +96,21 @@ def is_online(resource):
 
 
 # RT
-logger = logging.getLogger('rt')
+logger = logging.getLogger("rt")
 tracker = rt.Rt(rt_url, rt_user, rt_pass, verify_cert=False)
 tracker.login()
 
 # Sphinx
-#client = sphinxapi.SphinxClient()
-#client.SetServer(sphinx_server, sphinx_port)
-#client.SetMatchMode(2)
+# client = sphinxapi.SphinxClient()
+# client.SetServer(sphinx_server, sphinx_port)
+# client.SetMatchMode(2)
 
 
 def is_ticket_open(id):
     status = False
     try:
         rt_response = tracker.get_ticket(id)
-        ticket_status = rt_response['Status']
+        ticket_status = rt_response["Status"]
         if ticket_status == "open" or ticket_status == "new":
             status = id
     except Exception:
@@ -104,14 +119,15 @@ def is_ticket_open(id):
 
 
 def open_tickets_for_url(url):
-    #q = "\"%s\"" % url
-    #res = 0
+    # q = "\"%s\"" % url
+    # res = 0
     ## tickets = []
-    #result = client.Query(q)
-    #for match in result['matches']:
+    # result = client.Query(q)
+    # for match in result['matches']:
     #    res = is_ticket_open(match['id'])
-    #return res
+    # return res
     return False
+
 
 print("Checking URL: %s" % url)
 
@@ -135,11 +151,23 @@ print("Querying URLAbuse:")
 response = my_pyurlabuse.run_query(url, with_digest=True)
 time.sleep(5)
 response = my_pyurlabuse.run_query(url, with_digest=True)
-emails = ",".join([email.strip('.') for email in response['digest'][1]])
-asns = response['digest'][2]
+emails = ",".join([email.strip(".") for email in response["digest"][1]])
+asns = response["digest"][2]
 
-text = ioc_fanger.defang(response['digest'][0])
-d = {'details': text}
+if misp_id is not False:
+    try:
+        misp_urls = [
+            normalize_url_hostname(next(iter(item))) for item in response["result"]
+        ]
+    except ValueError:
+        print(
+            "Invalid URL or IDNA hostname from URLAbuse; no ticket created.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+text = ioc_fanger.defang(response["digest"][0])
+d = {"details": text}
 
 try:
     f = open(template)
@@ -152,7 +180,7 @@ except Exception:
 f.close()
 
 # print emails
-#emails = "sascha@rommelfangen.de"
+# emails = "sascha@rommelfangen.de"
 
 # this could happen if there is no IP address or if for some reason
 # urlabuse is not giving back an ASN name in due time.
@@ -164,11 +192,13 @@ else:
 if debug:
     sys.exit(42)
 
-#try:
-ticketid = tracker.create_ticket(Queue=queue, Subject=subject, Text=body, Requestors=emails)
+# try:
+ticketid = tracker.create_ticket(
+    Queue=queue, Subject=subject, Text=body, Requestors=emails
+)
 print("Ticket created: {}".format(ticketid))
 success = tracker.reply(ticketid, text=body)
-#except rt.RtError as e:
+# except rt.RtError as e:
 #    logger.error(e)
 
 
@@ -181,8 +211,8 @@ except rt.RtError as e:
 
 try:
     if templatename == "phishing_server.tmpl":
-        rt_response = tracker.edit_ticket(ticketid, CF_Classification='Phishing')
-        rt_response = tracker.edit_ticket(ticketid, CF_RSIT_1002='Fraud')
+        rt_response = tracker.edit_ticket(ticketid, CF_Classification="Phishing")
+        rt_response = tracker.edit_ticket(ticketid, CF_RSIT_1002="Fraud")
 except rt.RtError as e:
     logger.error(e)
 
@@ -191,11 +221,11 @@ tracker.logout()
 if misp_id is not False:
     misp = init(misp_url, misp_key)
 
-    res_search = misp.search(controller='attributes',eventid=misp_id, value=url)
+    res_search = misp.search(controller="attributes", eventid=misp_id, value=url)
     uuid = None
     try:
-        for attribs in res_search['response']['Attribute']:
-            uuid = attribs['uuid']
+        for attribs in res_search["response"]["Attribute"]:
+            uuid = attribs["uuid"]
     except:
         pass
     if uuid is not None:
@@ -206,38 +236,68 @@ if misp_id is not False:
         sys.exit(0)
     redirect_count = 0
     fex = Faup()
+    # Screenshot collection uses the original URL's hostname as its filename.
+    fex.decode(original_url)
+    screenshot = fex.get_host().lower() + ".png"
     fex.decode(url)
     hostname = fex.get_host().lower()
-    screenshot = hostname + '.png'
-    mispObject = MISPObject('phishing')
-    mispObject.add_attribute('hostname', value=hostname)
-    for key in response['result']:
-        u = list(key.keys())[0]
+    mispObject = MISPObject("phishing")
+    mispObject.add_attribute("hostname", value=hostname)
+    for u in misp_urls:
         if redirect_count == 0:
             comment = "initial URL"
-            mispObject.add_attribute('url', value=u, comment=comment)
+            mispObject.add_attribute("url", value=u, comment=comment)
         else:
             comment = "redirect URL: {}"
-            mispObject.add_attribute('url-redirect', value=u, comment=comment.format(redirect_count))
+            mispObject.add_attribute(
+                "url-redirect", value=u, comment=comment.format(redirect_count)
+            )
         redirect_count += 1
         fex.decode(u)
         nexthost = fex.get_host().lower()
         if nexthost != hostname:
             hostname = nexthost
-            mispObject.add_attribute('hostname', to_ids=False, value=hostname)
-    for email in response['digest'][1]:
-        mispObject.add_attribute('takedown-request-to', value=email)
-    screenshot_path = 'screenshots/' + screenshot
+            mispObject.add_attribute("hostname", to_ids=False, value=hostname)
+    for email in response["digest"][1]:
+        mispObject.add_attribute("takedown-request-to", value=email)
+    screenshot_path = "screenshots/" + screenshot
     if os.path.exists(screenshot_path) and os.path.getsize(screenshot_path) > 0:
         try:
-            mispObject.add_attribute('screenshot', value=screenshot, data=BytesIO(open(screenshot_path, 'rb').read()))
+            mispObject.add_attribute(
+                "screenshot",
+                value=screenshot,
+                data=BytesIO(open(screenshot_path, "rb").read()),
+            )
         except:
             pass
-    mispObject.add_attribute('verification-time', value=datetime.datetime.now().isoformat())
-    mispObject.add_attribute('takedown-request', value=datetime.datetime.now().isoformat())
-    mispObject.add_attribute('internal-reference', value=ticketid, distribution=0)
-    mispObject.add_attribute('online', value="Yes")
-    mispObject.add_attribute('verified', value="Yes")
-    #print(mispObject.to_json(indent=2))
-    misp.add_object(misp_id, mispObject)
+    mispObject.add_attribute(
+        "verification-time", value=datetime.datetime.now().isoformat()
+    )
+    mispObject.add_attribute(
+        "takedown-request", value=datetime.datetime.now().isoformat()
+    )
+    mispObject.add_attribute("internal-reference", value=ticketid, distribution=0)
+    mispObject.add_attribute("online", value="Yes")
+    mispObject.add_attribute("verified", value="Yes")
+    # print(mispObject.to_json(indent=2))
+    try:
+        result = misp.add_object(misp_id, mispObject)
+    except Exception:
+        print(
+            "MISP object save failed; RT ticket already created. Do not rerun ticket creation.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if (
+        not isinstance(result, dict)
+        or "errors" in result
+        or result.get("saved") is False
+        or not isinstance(result.get("Object"), dict)
+        or not result["Object"].get("id")
+    ):
+        print(
+            "MISP object save not confirmed; RT ticket already created. Do not rerun ticket creation.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     print("Information added to MISP.")
